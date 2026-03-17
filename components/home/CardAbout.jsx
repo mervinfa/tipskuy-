@@ -40,13 +40,13 @@ const CardAbout = () => {
       <div className="bg-[#FFFBFB] border-2 border-gray-200 rounded-xl p-8 md:p-12 flex flex-col md:flex-row items-center gap-10 w-full shadow-sm">
         
         <div className="w-full md:w-1/2 flex flex-col justify-center text-center px-2 md:px-6">
-          <p className="text-slate-600 text-lg md:text-xl font-medium leading-relaxed mb-6">
+          <p className="text-slate-600 text-lg font-bold leading-relaxed mb-6">
             TipSkuy hadir sebagai solusi cerdas untuk kamu yang sering lupa. Melalui sistem pengantaran berbasis komunitas, barangmu yang tertinggal akan sampai kembali ke tanganmu dengan aman, cepat, dan biaya yang sangat terjangkau.
           </p>
           
           <hr className="w-full border-t-2 border-gray-400 mb-4" />
           
-          <p className="text-slate-800 text-sm md:text-base">
+          <p className="text-slate-800 text-lg">
             Bawa Untung bagi yang Antar, Tenang bagi yang Titip.
           </p>
         </div>
