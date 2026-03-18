@@ -13,14 +13,12 @@ const InputL = () => {
           </div>
 
           <form className="space-y-4">
-            {/* Input E-mail */}
             <input 
               type="email" 
               placeholder="E-mail" 
               className="w-full p-3 bg-[#f3f4f6] border-2 border-transparent focus:border-black rounded-lg outline-none transition-all"
             />
 
-            {/* Input Password */}
             <div className="relative">
               <input 
                 type="password" 
@@ -36,19 +34,16 @@ const InputL = () => {
               <a href="#" className="text-xs font-bold text-black hover:underline">Forgot Password?</a>
             </div>
 
-            {/* Tombol Login */}
             <button className="w-full py-3 bg-[#ff9248] text-black font-bold border-2 border-black rounded-lg shadow-[4px_4px_0px_0px_black] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all">
               Login
             </button>
 
-            {/* Divider */}
             <div className="flex items-center my-4">
               <div className="flex-grow border-t border-gray-300"></div>
               <span className="mx-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Or, Login with</span>
               <div className="flex-grow border-t border-gray-300"></div>
             </div>
 
-            {/* Social Login */}
             <div className="space-y-2">
               <button className="w-full py-2.5 border-2 border-gray-200 rounded-lg flex items-center justify-center gap-2 font-bold text-sm hover:bg-gray-50 transition-colors">
                 <span>G</span> Google

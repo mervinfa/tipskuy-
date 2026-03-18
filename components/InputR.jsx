@@ -11,22 +11,19 @@ const InputR = () => {
           </p>
         </div>
 
-        <form className="space-y-3"> {/* Jarak antar elemen sedikit diperlebar agar rapi */}
-          {/* Input Full Name */}
+        <form className="space-y-3">
+
           <input 
             type="text" 
             placeholder="Full Name" 
             className="w-full p-3 bg-[#f3f4f6] border-2 border-transparent focus:border-black rounded-lg outline-none transition-all"
           />
-          
-          {/* Input Email */}
+ 
           <input 
             type="email" 
             placeholder="E-mail" 
             className="w-full p-3 bg-[#f3f4f6] border-2 border-transparent focus:border-black rounded-lg outline-none transition-all"
           />
-
-          {/* Input Password */}
           <div className="relative">
             <input 
               type="password" 
@@ -37,8 +34,6 @@ const InputR = () => {
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
           </div>
-
-          {/* Input Confirm Password */}
           <div className="relative">
             <input 
               type="password" 
@@ -49,20 +44,16 @@ const InputR = () => {
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
           </div>
-
-          {/* Tombol Register */}
           <button className="w-full py-3 mt-4 bg-[#ff9248] text-black font-bold border-2 border-black rounded-lg shadow-[4px_4px_0px_0px_black] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all">
             Register
           </button>
 
-          {/* Divider */}
           <div className="flex items-center my-4">
             <div className="flex-grow border-t border-gray-300"></div>
             <span className="mx-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Or, Register with</span>
             <div className="flex-grow border-t border-gray-300"></div>
           </div>
 
-          {/* Social Login */}
           <div className="space-y-2">
             <button className="w-full py-2.5 border-2 border-gray-200 rounded-lg flex items-center justify-center gap-2 font-bold text-sm hover:bg-gray-50 transition-colors">
               <span>G</span> Google
