@@ -4,6 +4,8 @@ import CardTips from "@/components/home/CardTips"
 import CardReview from "@/components/home/CardReview"
 import Footer from "@/components/Footer"
 import CardAbout from "@/components/home/CardAbout"
+import CardAboutInfo from "@/components/home/CardAboutInfo"
+import ContactUs from "@/components/home/ContactUs"
 
 export default function Home() {
   return (
@@ -19,8 +21,12 @@ export default function Home() {
             <CardReview/>
           </div>
         </div>
-            <CardAbout/>
+        <div className="">
+          <CardAbout />
+        </div>
 
+          <CardAboutInfo />
+          <ContactUs />
 
       </main>
 
