@@ -11,7 +11,6 @@ const CardAbout = () => {
   return (
     <div className="-mx-4 md:-mx-6 w-screen w-full bg-[#FFF1F1] border-2 border-gray-100 rounded-2xl p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 shadow-sm">
       
-      {/* SISI KIRI: Teks */}
       <div className="w-full md:w-1/2 flex flex-col items-center text-center">
         <p className="text-[#5B6B7E] text-xl md:text-2xl font-medium leading-relaxed mb-8">
           TipSkuy hadir sebagai solusi cerdas untuk kamu yang sering lupa. Melalui sistem pengantaran berbasis komunitas, barangmu yang tertinggal akan sampai kembali ke tanganmu dengan aman, cepat, dan biaya yang sangat terjangkau.
@@ -22,7 +21,6 @@ const CardAbout = () => {
         </p>
       </div>
 
-      {/* SISI KANAN: Slider Gambar */}
       <div className="w-full md:w-1/2">
         <div className="rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
           <img 
@@ -30,7 +28,6 @@ const CardAbout = () => {
             alt="Slider" 
             className="w-full aspect-video object-cover"
           />
-          {/* Indikator Slider Biru */}
           <div className="flex h-3 w-full">
             {images.map((_, i) => (
               <div 
