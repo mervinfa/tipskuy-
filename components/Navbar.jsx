@@ -10,7 +10,7 @@ export default function Navbar(){
     ];
 
     return (
-        <main>
+        <header className="fixed top-4 left-4 right-4 md:left-6 md:right-6 z-50">
             <div className="bg-[#FFFFAF] rounded-full p-3 flex items-center justify-between">
                 <h1 className="font-bold text-3xl pl-10">Tipskuy!</h1>
 
@@ -42,6 +42,6 @@ export default function Navbar(){
             </div>
 
 
-        </main>
+        </header>
     )
 }

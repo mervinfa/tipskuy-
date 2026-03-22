@@ -1,5 +1,5 @@
 import React from 'react';
-import InputR from '@/components/InputR';
+import InputR from '@/components/auth/InputR';
 
 const register = () => {
   return (

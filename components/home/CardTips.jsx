@@ -14,6 +14,11 @@ const CardTips = () => {
                             
                             <div className="bg-white border-2 border-black rounded-xl p-3 flex flex-col items-center shadow-md">
                                 <div className="w-full aspect-[3/4] bg-gray-200 border-2 border-black rounded-lg mb-3 overflow-hidden">
+                                    <img 
+                                            src="/images/blog/foto-barang.png" 
+                                            alt="Foto Barang" 
+                                            className="w-full h-full object-cover" 
+                                        />
                                 </div>
                                 <p className="font-bold text-lg text-center pb-1">
                                     Foto Barang
@@ -22,6 +27,11 @@ const CardTips = () => {
 
                             <div className="bg-white border-2 border-black rounded-xl p-3 flex flex-col items-center shadow-md">
                                 <div className="w-full aspect-[3/4] bg-gray-200 border-2 border-black rounded-lg mb-3 overflow-hidden">
+                                 <img 
+                                            src="/images/blog/atur-penjemputan.png" 
+                                            alt="Foto Barang" 
+                                            className="w-full h-full object-cover" 
+                                        />
                                 </div>
                                 <p className="font-bold text-lg text-center pb-1">
                                     Atur Penjemputan
@@ -30,6 +40,11 @@ const CardTips = () => {
 
                             <div className="bg-white border-2 border-black rounded-xl p-3 flex flex-col items-center shadow-md">
                                 <div className="w-full aspect-[3/4] bg-gray-200 border-2 border-black rounded-lg mb-3 overflow-hidden">
+                                 <img 
+                                            src="/images/blog/sampai-tujuan.png" 
+                                            alt="Foto Barang" 
+                                            className="w-full h-full object-cover" 
+                                        />
                                 </div>
                                 <p className="font-bold text-lg text-center pb-1">
                                     Sampai Tujuan

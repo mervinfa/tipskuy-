@@ -7,7 +7,7 @@ const PhotoCard= () => {
         
         <div className="flex-shrink-0">
           <div className="w-12 h-12 rounded-full border-2 border-black overflow-hidden bg-gray-200">
-            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ardi" alt="Avatar" className="w-full h-full object-cover" />
+            <img src="/images/avatars/profile.png" alt="Avatar" className="w-full h-full object-cover" />
           </div>
         </div>
 

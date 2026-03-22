@@ -1,5 +1,6 @@
 import React from 'react';
 import { Youtube, Facebook, Music, MessageCircle } from 'lucide-react';
+import { FaWhatsapp, FaTiktok, FaFacebook, FaYoutube } from "react-icons/fa";
 
 const ContactUs = () => {
   return (
@@ -22,14 +23,14 @@ const ContactUs = () => {
               <input type="text" className="flex-1 bg-transparent px-4 outline-none text-gray-700" />
             </div>
 
-=            <div className="flex bg-[#F5F5F5] border border-gray-200 rounded-md overflow-hidden h-12 shadow-sm">
+            <div className="flex bg-[#F5F5F5] border border-gray-200 rounded-md overflow-hidden h-12 shadow-sm">
               <div className="bg-[#DFDFDF] w-24 flex items-center justify-center text-sm font-medium text-gray-500">
                 E-mail
               </div>
               <input type="email" className="flex-1 bg-transparent px-4 outline-none text-gray-700" />
             </div>
 
-            <div className="flex bg-[#F5F5F5] border border-gray-200 rounded-md overflow-hidden min-h-[140px] shadow-sm">
+            <div className="flex bg-[#F5F5F5] border border-gray-200 rounded-md overflow-hidden min-h-[180px] shadow-sm">
               <div className="bg-[#DFDFDF] w-24 flex items-start justify-center pt-4 text-sm font-medium text-gray-500 text-center leading-tight">
                 Your<br />Message
               </div>
@@ -40,13 +41,13 @@ const ContactUs = () => {
 
           <div className="bg-[#F5F5F5] border border-gray-200 rounded-md p-6 flex justify-center items-center shadow-sm">
             
-            <div className="border border-dashed border-gray-500 w-full flex py-8 px-4 md:px-8">
+            <div className="border border-dashed border-gray-500 w-full flex  px-4 md:px-8">
               
-              <div className="flex flex-col gap-6 items-center border-r border-dashed border-gray-500 pr-6">
-                <Youtube size={28} strokeWidth={2.5} className="text-black" />
-                <Facebook size={28} strokeWidth={2.5} className="text-black" />
-                <Music size={28} strokeWidth={2.5} className="text-black" /> 
-                <MessageCircle size={28} strokeWidth={2.5} className="text-black" />
+              <div className="flex flex-col gap-6 items-center border-r border-dashed border-gray-500 pr-6 py-8">
+                <FaYoutube size={28} strokeWidth={2.5} className="text-black" />
+                <FaFacebook size={28} strokeWidth={2.5} className="text-black" />
+                <FaTiktok size={28} strokeWidth={2.5} className="text-black" /> 
+                <FaWhatsapp size={28} strokeWidth={2.5} className="text-black" />
               </div>
 
               <div className="flex flex-col gap-6 pl-6 justify-center">

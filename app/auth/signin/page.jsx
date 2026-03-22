@@ -14,7 +14,7 @@ const Signin = () => {
         
         <div className="profile mb-8">
           <img 
-            src="/Assets/profile.png" 
+            src="/Images/avatars/profile.png" 
             alt="Profile" 
             className="w-32 h-32 md:w-48 md:h-48 rounded-full border-2 border-black object-cover"
           />

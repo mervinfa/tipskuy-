@@ -1,5 +1,5 @@
 import React from 'react';
-import InputL from '@/components/InputL';
+import InputL from '@/components/auth/InputL';
 
 const Login = () => {
   return (
