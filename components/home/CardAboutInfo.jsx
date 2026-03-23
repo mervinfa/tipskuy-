@@ -31,7 +31,7 @@ const CardAboutInfo = () => {
           <img 
             src="/images/blog/aboutinfo.png" 
             alt="Ilustrasi Tipskuy" 
-            className="w-full max-w-[300px] h-auto object-contain"
+            className="w-full max-w-[500px] h-auto object-contain"
           />
         </div>
       </div>
