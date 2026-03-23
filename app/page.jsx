@@ -26,7 +26,7 @@ export default function Home() {
           <CardAbout />
         </div>
 
-        <div id="about" className="scroll-mt-28 md:scroll-mt-16">
+        <div id="about" className="scroll-mt-28 md:scroll-mt-14">
             <CardAboutInfo />
         </div>
 

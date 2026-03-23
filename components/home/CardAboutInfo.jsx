@@ -4,16 +4,12 @@ const CardAboutInfo = () => {
   return (
     <div className="w-full max-w-7xl mx-auto flex flex-col items-center gap-6 mt-10">
       
-      {/* Judul About */}
       <h1 className="font-extrabold text-5xl md:text-5xl text-black">
         About
       </h1>
 
-      {/* --- BANNER UTAMA --- */}
-      {/* Ubah menjadi flex-row agar teks di kiri dan gambar di kanan */}
       <div className="w-full bg-[#A3EFFF] border-2 border-gray-600 rounded-xl flex flex-col md:flex-row justify-between overflow-hidden shadow-sm p-10">
         
-        {/* Bagian Teks (Kiri) */}
         <div className="p-6 md:p-8 w-full md:w-3/5 flex flex-col justify-center">
           <h2 className="font-extrabold text-2xl md:text-4xl text-black mb-4">
             Tentang Tipskuy!
@@ -26,7 +22,6 @@ const CardAboutInfo = () => {
           </p>
         </div>
 
-        {/* Bagian Gambar (Kanan) */}
         <div className="w-full md:w-2/5 flex items-center justify-center">
           <img 
             src="/images/blog/aboutinfo.png" 
@@ -36,15 +31,12 @@ const CardAboutInfo = () => {
         </div>
       </div>
 
-      {/* Judul Visi & Misi */}
-      <h2 className="font-extrabold text-5xl md:text-5xl text-black mt-6">
+      <h2 className="font-extrabold text-5xl md:text-5xl text-black mt-3">
         Visi & Misi Kami
       </h2>
 
-      {/* --- GRID 3 CARD --- */}
       <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-15">
         
-        {/* Card 1: Aman */}
         <div className="w-full bg-[#FFA3D4] border-2 border-gray-600 rounded-xl shadow-sm flex flex-col p-5 md:p-8">
           <div className="flex items-center gap-4 mb-3">
             <div className="bg-white border border-gray-400 p-2 rounded-lg">
@@ -57,7 +49,6 @@ const CardAboutInfo = () => {
           </p>
         </div>
 
-        {/* Card 2: Cepat */}
         <div className="w-full bg-[#FFF89A] border-2 border-gray-600 rounded-xl shadow-sm flex flex-col p-5 md:p-8">
           <div className="flex items-center gap-4 mb-3">
             <div className="bg-white border border-gray-400 p-2 rounded-lg">
@@ -70,7 +61,6 @@ const CardAboutInfo = () => {
           </p>
         </div>
 
-        {/* Card 3: Hemat */}
         <div className="w-full bg-[#B9FF9A] border-2 border-gray-600 rounded-xl shadow-sm flex flex-col p-5 md:p-8">
           <div className="flex items-center gap-4 mb-3">
             <div className="bg-white border border-gray-400 p-2 rounded-lg">
