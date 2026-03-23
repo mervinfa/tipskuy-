@@ -5,11 +5,25 @@ import { FaBars, FaTimes } from "react-icons/fa";
 export default function Navbar(){
     const [isOpen, setIsOpen] = useState(false);
     
+    const handleScroll = (e, path) => {
+        if (path.includes('#')) {
+            const id = path.split('#')[1]; 
+            const element = document.getElementById(id);
+            if (element) {
+                e.preventDefault(); 
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' }); 
+                setIsOpen(false); 
+            }
+        } else {
+            setIsOpen(false);
+        }
+    };
+
     const menuList = [
-        { name: "Home", path: "/"},
-        { name: "About", path: "#about"},
+        { name: "Home", path: "/#main-page"},
+        { name: "About", path: "/#about"},
         { name: "Cari Driver", path: "/caridriver"},
-        { name: "Contact", path: "#contact"}
+        { name: "Contact", path: "/#contact"}
     ];
 
     return (
@@ -23,6 +37,7 @@ export default function Navbar(){
                         <Link 
                         href={item.path}
                         key={index}
+                        onClick={(e) => handleScroll(e, item.path)}
                         className="hover:text-[#FFAE4C] transition-colors text-black"
                         >
                             {item.name}

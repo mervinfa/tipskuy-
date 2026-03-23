@@ -7,7 +7,7 @@ const CardAdvertising = () => {
                     <img 
                         src="/images/blog/about.png"
                         alt="Ilustrasi TipSkuy Titip Barang" 
-                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 transform-gpu will-change-transform group-hover:scale-105" 
                     />
 
                     <div className="absolute top-8 right-8 z-10 max-w-lg ">
