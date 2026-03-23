@@ -16,47 +16,50 @@ const DriverList = ({ onTitipClick }) => {
   return (
     <div className="bg-[#D1FAE5] p-6 p-8 rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-lg max-w-5xl mx-auto font-sans">
       {/* Header Tabel */}
-      <div className="grid grid-cols-4 gap-4 bg-[#D1D5DB] p-3 rounded-md border border-gray-400 mb-4 text-sm font-bold text-gray-800">
-        <div className="text-center">Driver</div>
+      <div className="grid grid-cols-4 gap-4 bg-[#D1D5DB] p-3 rounded-md border border-gray-400 mb-4 text-xl font-bold text-gray-800">
+        <div className="text-left px-8">Driver</div>
         <div>Berangkat</div>
         <div className="text-center">Durasi</div>
         <div>Tiba</div>
       </div>
 
       {/* List Driver */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
         {drivers.map((driver) => (
           <div 
-            key={driver.id} 
-            className={`grid grid-cols-4 items-center gap-4 p-3 rounded-lg border border-gray-400 shadow-sm transition-all
+
+            className={`grid grid-cols-4 items-center gap-4 p-8 rounded-lg border border-gray-400 shadow-sm transition-all
               ${driver.status === 'disabled' ? 'bg-[#DCFCE7] opacity-60' : 'bg-[#D1D5DB] hover:bg-gray-300'}`}
           >
-            {/* Kolom Driver */}
-            <div className="flex flex-col items-center gap-1">
-              <div className="w-12 h-12 rounded-full border-2 border-gray-400 overflow-hidden bg-white">
-                <img 
-                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${driver.name}`} 
-                  alt="avatar" 
-                />
-              </div>
-              <span className="text-xs font-bold text-gray-700">{driver.name}</span>
-            </div>
+           {/* Kolom Driver - Diubah ke flex-col dan items-center */}
+<div className="flex flex-col items-left gap-2 justify-left p-2">
+  <div className="w-14 h-14 rounded-full border-2 border-black overflow-hidden bg-white shadow-sm">
+    <img 
+      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${driver.name}`} 
+      alt="avatar" 
+      className="w-full h-full object-cover"
+    />
+  </div>
+  <div className="text-xl font-extrabold text-black text-left p-1 leading-tight">
+    {driver.name}
+  </div>
+</div>
 
             {/* Kolom Berangkat */}
-            <div className="text-[10px] sm:text-xs text-gray-800">
+            <div className="text-[10px] sm:text-xl text-gray-800">
               <p>{driver.origin}</p>
               <p className="font-bold">{driver.time}</p>
               <p>{driver.date}</p>
             </div>
 
             {/* Kolom Durasi */}
-            <div className="text-center font-bold text-xs text-gray-800">
+            <div className="text-center font-bold text-xl text-gray-800">
               {driver.duration}
             </div>
 
             {/* Kolom Tiba + Button */}
             <div className="flex justify-between items-center pr-2">
-              <div className="text-[10px] sm:text-xs text-gray-800">
+              <div className="text-[10px] sm:text-xl text-gray-800">
                 <p>{driver.dest}</p>
                 <p className="font-bold">{driver.arrival}</p>
                 <p>{driver.date}</p>
@@ -65,7 +68,7 @@ const DriverList = ({ onTitipClick }) => {
               {/* 2. PASANG ONCLICK DI SINI */}
               <button 
                 onClick={onTitipClick}
-                className="bg-[#FEF08A] border border-gray-400 text-[10px] font-bold px-4 py-1.5 rounded shadow-sm hover:bg-yellow-200 active:scale-95 transition-all"
+                className="bg-[#FEF08A] border border-gray-400 text-[20px] font-bold px-4 py-1.5 rounded shadow-sm hover:bg-yellow-200 active:scale-95 transition-all"
               >
                 Titip
               </button>
