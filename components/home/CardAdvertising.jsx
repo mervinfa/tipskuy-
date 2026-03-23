@@ -3,7 +3,7 @@ import Image from "next/image";
 const CardAdvertising = () => {
     return(
              <div className="w-full pt-10">
-                <div className="h-full w-full border-2 border-black rounded-xl shadow-lg overflow-hidden relative group p-5">
+                <div className="h-[400px] md:h-full min-h-[750px] md:min-h-full w-full border-[2px] border-black rounded-xl shadow-lg overflow-hidden relative group p-5">
                     <img 
                         src="/images/blog/about.png"
                         alt="Ilustrasi TipSkuy Titip Barang" 

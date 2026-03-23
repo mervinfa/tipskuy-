@@ -10,11 +10,11 @@ const CardAboutInfo = () => {
 
       <div className="w-full bg-[#A3EFFF] border-2 border-gray-600 rounded-xl flex flex-col md:flex-row justify-between overflow-hidden shadow-sm p-10">
         
-        <div className="p-6 md:p-8 w-full md:w-3/5 flex flex-col justify-center">
-          <h2 className="font-extrabold text-2xl md:text-4xl text-black mb-4">
+        <div className="p-6 md:p-8 w-full md:w-3/5 flex flex-col justify-center items-center md:items-start">
+          <h2 className="font-extrabold text-2xl md:text-4xl text-black mb-4 ">
             Tentang Tipskuy!
           </h2>
-          <hr className='w-[340px] border-t-[6px] border-black mb-6'/>
+          <hr className='w-full md:w-[340px] border-t-[4px] md:border-t-[6px] border-black mb-4 md:mb-6'/>
           <p className="text-black text-sm md:text-xl leading-relaxed">
             TipSkuy! hadir sebagai solusi cerdas untuk kamu yang sering lupa. Melalui sistem 
             pengantaran berbasis komunitas, barangmu yang tertinggal akan sampai kembali ke 
@@ -22,6 +22,7 @@ const CardAboutInfo = () => {
           </p>
         </div>
 
+        {/* Bagian Gambar (Kanan) */}
         <div className="w-full md:w-2/5 flex items-center justify-center">
           <img 
             src="/images/blog/aboutinfo.png" 
@@ -35,7 +36,7 @@ const CardAboutInfo = () => {
         Visi & Misi Kami
       </h2>
 
-      <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-15">
+      <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mt-4">
         
         <div className="w-full bg-[#FFA3D4] border-2 border-gray-600 rounded-xl shadow-sm flex flex-col p-5 md:p-8">
           <div className="flex items-center gap-4 mb-3">
@@ -44,7 +45,7 @@ const CardAboutInfo = () => {
             </div>
             <h3 className="font-extrabold text-xl md:text-2xl text-black">Aman</h3>
           </div>
-          <p className="text-black font-medium text-sm md:text-xl leading-snug">
+          <p className="text-black font-medium text-md md:text-xl leading-snug">
             Keamanan Utama. Setiap pengantar diverifikasi.
           </p>
         </div>
@@ -56,7 +57,7 @@ const CardAboutInfo = () => {
             </div>
             <h3 className="font-extrabold text-xl md:text-2xl text-black">Cepat</h3>
           </div>
-          <p className="text-black font-medium text-sm md:text-xl leading-snug">
+          <p className="text-black font-medium text-md md:text-xl leading-snug">
             Kecepatan Komunitas. Temukan yang searah, barang sampai lebih cepat.
           </p>
         </div>
@@ -68,7 +69,7 @@ const CardAboutInfo = () => {
             </div>
             <h3 className="font-extrabold text-xl md:text-2xl text-black">Hemat</h3>
           </div>
-          <p className="text-black font-medium text-sm md:text-xl leading-snug">
+          <p className="text-black font-medium text-md md:text-xl leading-snug">
             Biaya Transparan. Lebih hemat karena searah.
           </p>
         </div>

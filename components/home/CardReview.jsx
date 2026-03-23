@@ -4,11 +4,11 @@ const CardReview = () => {
     return (
         <div className="w-full h-full pt-5 flex flex-col">
             
-            <div className="flex-1 bg-[#9FFFFD] border-2 border-black rounded-xl p-1  flex flex-col justify-center items-center">
+            <div className="flex-1 bg-[#9FFFFD] border-2 border-black rounded-xl p-5 md:p-1 flex flex-col justify-center items-center">
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center w-full max-w-xl">
                     
-                    <div className="flex flex-col gap-1 justify-center items-center md:items-start">
+                    <div className="flex flex-col gap-3 flex flex-col justify-center items-center md:items-end order-2 md:order-1">
                         <PhotoCard />
                         <PhotoCard />
                     </div>

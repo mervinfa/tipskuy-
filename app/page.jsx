@@ -11,7 +11,7 @@ export default function Home() {
   return (
     <div id="main-page" className="min-h-screen bg-white flex flex-col overflow-x-hidden scroll-smooth">
       
-      <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6 flex flex-col gap-1">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 pt-4 pb-0 md:px-6 md:pt-6 md:pb-0 flex flex-col gap-1">
         <Navbar/> 
         
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-5 mt-14 md:mt-16">
@@ -35,8 +35,8 @@ export default function Home() {
         </div>
 
       </main>
-
       <Footer/>
+
       
     </div>
   );

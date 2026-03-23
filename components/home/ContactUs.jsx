@@ -38,7 +38,7 @@ const ContactUs = () => {
               <textarea className="flex-1 bg-transparent p-4 outline-none resize-none text-gray-700"></textarea>
             </div>
 
-          <button className="bg-[#DFDFDF] hover:bg-[#6FAF4F] border-[3px] border-black text-black font-extrabold text-lg py-3 px-10 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] self-start mt-2">
+          <button className="bg-[#DFDFDF] hover:bg-[#6FAF4F] border-[3px] border-black text-black font-extrabold text-lg py-3 px-10 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] self-center md:self-start mt-2">
               Submit
             </button>
 
