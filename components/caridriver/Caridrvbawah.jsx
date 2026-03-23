@@ -27,7 +27,7 @@ const DriverList = ({ onTitipClick }) => {
       <div className="flex flex-col gap-2">
         {drivers.map((driver) => (
           <div 
-
+            key={driver.id}
             className={`grid grid-cols-4 items-center gap-4 p-8 rounded-lg border border-gray-400 shadow-sm transition-all
               ${driver.status === 'disabled' ? 'bg-[#DCFCE7] opacity-60' : 'bg-[#D1D5DB] hover:bg-gray-300'}`}
           >

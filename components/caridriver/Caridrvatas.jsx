@@ -1,6 +1,11 @@
+"use client";
+import {useState} from "react";
 import React from 'react';
+import PopUpTitip from "@/components/caridriver/PopUpTitip";
 
 const TipskuySearch = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <div className="bg-[#A5F3FC] p-8 rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] max-w-5xl mx-auto font-sans">
       <h2 className="text-3xl font-extrabold mb-6 text-black">Titip di Tipskuy!</h2>
@@ -48,10 +53,18 @@ const TipskuySearch = () => {
 
         {/* Tombol Cari */}
         <div className="flex items-end">
-          <button className="bg-[#FEF08A] border-2 border-black text-black font-bold py-2 px-8 rounded-md hover:bg-yellow-300 transition-transform active:translate-y-1 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-lg">
+          <button 
+              onClick={() => setIsOpen(true)}
+              className="bg-[#FEF08A] border-2 border-black text-black font-bold py-2 px-8 rounded-md hover:bg-yellow-300 transition-transform active:translate-y-1 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-lg"
+          >
             Cari Ekspedisi
           </button>
         </div>
+
+         <PopUpTitip 
+        isOpen={isOpen} 
+        onClose={() => setIsOpen(false)} 
+        />
       </div>
     </div>
   );

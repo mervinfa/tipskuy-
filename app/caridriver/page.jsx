@@ -2,12 +2,12 @@
 
 import React, { useState } from 'react';
 import Nav from '@/components/Navbar'; 
-import CariDrv from '@/components/Caridrvatas'; 
-import CariDrvB from '@/components/Caridrvbawah'; 
-import Foot from '@/components/Footer';
-import PopUpTitip from '@/components/PopUpTitip';
+import CariDrv from '@/components/caridriver/Caridrvatas'; 
+import CariDrvB from '@/components/caridriver/Caridrvbawah'; 
+import PopUpTitip from '@/components/caridriver/PopUpTitip';
+import Footer from '@/components/Footer';
 
-const CariDriv = () => {
+const CariDriver = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
@@ -32,9 +32,9 @@ const CariDriv = () => {
 
       </main>
 
-      <Foot />
+      <Footer />
     </div>
   );
 };
 
-export default CariDriv;
+export default CariDriver;
