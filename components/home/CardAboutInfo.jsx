@@ -2,13 +2,13 @@ import React from 'react';
 
 const CardAboutInfo = () => {
   return (
-    <div className="w-full max-w-7xl mx-auto flex flex-col items-center gap-6 mt-10">
+    <div className="w-full max-w-7xl mx-auto flex flex-col items-center gap-6 mt-13">
       
       <h1 className="font-extrabold text-5xl md:text-5xl text-black">
         About
       </h1>
 
-      <div className="w-full bg-[#A3EFFF] border-2 border-gray-600 rounded-xl flex flex-col md:flex-row justify-between overflow-hidden shadow-sm p-10">
+      <div className="w-full bg-[#A3EFFF] border-2 border-gray-600 rounded-xl flex flex-col md:flex-row justify-between overflow-hidden shadow-sm p-5">
         
         <div className="p-6 md:p-8 w-full md:w-3/5 flex flex-col justify-center items-center md:items-start">
           <h2 className="font-extrabold text-2xl md:text-4xl text-black mb-4 ">

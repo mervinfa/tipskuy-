@@ -23,7 +23,7 @@ const DriverList = () => {
   ];
 
   return (
-    <div className="bg-[#D1FAE5] p-6 md:p-8 rounded-xl border-[3px] border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] max-w-5xl mx-auto font-sans mt-10">
+    <div className="bg-[#D1FAE5] p-6 md:p-8 rounded-xl border-[3px] border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] max-w-5xl mx-auto font-sans mt-5">
       
       <div className="grid grid-cols-4 gap-4 bg-[#D1D5DB] p-3 rounded-lg border-[3px] border-black mb-6 text-base md:text-xl font-extrabold text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hidden md:grid">
         <div className="text-left px-8">Driver</div>
@@ -32,14 +32,14 @@ const DriverList = () => {
         <div>Tiba</div>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 ">
         {drivers.map((driver) => (
           <div 
             key={driver.id}
-            className={`grid grid-cols-1 md:grid-cols-4 items-center gap-4 p-4 md:p-6 rounded-xl border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all
-              ${driver.status === 'disabled' ? 'bg-[#DCFCE7] opacity-60 grayscale' : 'bg-white hover:-translate-y-1'}`}
+            className={`grid grid-cols-1 md:grid-cols-4  items-center gap-4 p-4 md:p-6 rounded-xl border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all
+              ${driver.status === 'disabled' ? 'bg-[#DCFCE7] opacity-60 grayscale' : 'bg-[#D1D5DB] hover:-translate-y-1'}`}
           >
-            <div className="flex md:flex-col items-center md:items-start gap-4 md:gap-2 justify-start p-2">
+            <div className="flex md:flex-col items-center md:items-start gap-4 md:gap-2 justify-start p-2 ">
               <div className="w-14 h-14 rounded-full border-[3px] border-black overflow-hidden bg-white flex-shrink-0">
                 <img 
                   src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${driver.name}`} 
