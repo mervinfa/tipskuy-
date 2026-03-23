@@ -61,7 +61,7 @@ const PaymentMethode = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          <button className="bg-[#A0522D] hover:bg-[#8B4513] text-black font-extrabold text-xl py-2 px-10 border-[3px] border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all mt-4 w-max">
+          <button className="hidden md:block bg-[#A0522D] hover:bg-[#8B4513] text-black font-extrabold text-xl py-2 px-10 border-[3px] border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all mt-4 w-max">
             Next
           </button>
 
@@ -102,6 +102,10 @@ const PaymentMethode = ({ isOpen, onClose }) => {
               ))}
             </div>
           </div>
+
+              <button className="md:hidden bg-[#A0522D] hover:bg-[#8B4513] text-black font-extrabold text-xl py-3 px-10 border-[3px] border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all mt-6 w-full text-center">
+            Next
+          </button>
 
         </div>
 
