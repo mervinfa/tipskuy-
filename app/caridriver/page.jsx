@@ -1,31 +1,40 @@
-"use client"; 
-import { useState } from 'react';
-import Navbar from "@/components/Navbar";
-import ModalPesan from "@/components/caridriver/PaymentMethode"; 
+"use client";
 
-export default function CariDriver() {
+import React, { useState } from 'react';
+import Navbar from '@/components/Navbar'; 
+import CariDrv from '@/components/caridriver/Caridrvatas'; 
+import CariDrvB from '@/components/caridriver/Caridrvbawah'; 
+import PopUpTitip from '@/components/caridriver/PopUpTitip';
+import Footer from '@/components/Footer';
+
+const CariDriver = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-white">
-      <Navbar />
-      
-      <div className="pt-32 flex flex-col items-center justify-center">
-        <h1 className="text-4xl font-extrabold text-black mb-8">Pilih Driver Favoritmu</h1>
-        
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-[#B7FF8E] hover:bg-[#6FAF4F] border-[3px] border-black px-8 py-4 rounded-xl font-bold text-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all"
-        >
-          Pesan Sekarang
-        </button>
-      </div>
+    <div className="relative min-h-screen bg-white flex flex-col font-sans overflow-x-hidden"> 
+      <PopUpTitip isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
 
-      <ModalPesan 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-      />
-      
+      {/* Header: Dibuat ramping dan terpusat */}
+          <Navbar />
+
+      {/* Main Content: Mengatur lebar maksimal agar seragam */}
+      <main className="flex-grow flex flex-col items-center px-4 py-8 space-y-10">
+        
+        {/* Section Biru */}
+        <section className="w-full max-w-6x">
+          <CariDrv />
+        </section>
+
+        {/* Section Hijau */}
+        <section className="w-full max-w-5xl">
+          <CariDrvB onTitipClick={() => setIsModalOpen(true)} />
+        </section>
+
+      </main>
+
+      <Footer />
     </div>
   );
-}
+};
+
+export default CariDriver;
