@@ -9,10 +9,10 @@ const CardAbout = () => {
   ];
 
   return (
-    <div className="-mx-4 md:-mx-6 w-screen w-full bg-[#FFF1F1] border-2 border-gray-100 rounded-2xl p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 shadow-sm">
-      
-      <div className="w-full md:w-1/2 flex flex-col items-center text-center">
-        <p className="text-[#5B6B7E] text-xl md:text-2xl font-medium leading-relaxed mb-8">
+    <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-[#FFF1F1] border-2 border-gray-100 p-8 md:p-[150px] flex flex-col md:flex-row items-center gap-12 mt-18">
+      <div className='w-full max-w-7xl mx-auto px-4 md:px-6 flex flex-col md:flex-row items-center gap-12'>
+      <div className="w-full md:w-1/2 mx-18 flex flex-col items-center text-center">
+        <p className="text-[#5B6B7E] text-md md:text-xl font-medium leading-relaxed mb-8">
           TipSkuy hadir sebagai solusi cerdas untuk kamu yang sering lupa. Melalui sistem pengantaran berbasis komunitas, barangmu yang tertinggal akan sampai kembali ke tanganmu dengan aman, cepat, dan biaya yang sangat terjangkau.
         </p>
         <hr className="w-full border-t-2 border-gray-300 mb-6" />
@@ -37,6 +37,8 @@ const CardAbout = () => {
             ))}
           </div>
         </div>
+      </div>
+
       </div>
 
     </div>

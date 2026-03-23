@@ -2,9 +2,8 @@ import Image from "next/image";
 
 const CardAdvertising = () => {
     return(
-        <main>
-             <div className="grid h-full p-5 pt-10  ">
-                <div className="h-full min-h-[500px] w-full border-2 border-black rounded-xl shadow-lg overflow-hidden relative group p-5">
+             <div className="w-full pt-10">
+                <div className="h-full w-full border-2 border-black rounded-xl shadow-lg overflow-hidden relative group p-5">
                     <img 
                         src="/images/blog/about.png"
                         alt="Ilustrasi TipSkuy Titip Barang" 
@@ -12,10 +11,10 @@ const CardAdvertising = () => {
                     />
 
                     <div className="absolute top-8 right-8 z-10 max-w-lg ">
-                        <h1 className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-md">
+                        <h1 className="text-3xl md:text-4xl font-extrabold text-white drop-shadow-md">
                             Tipskuy!
                         </h1>
-                        <p className="mt-3 text-lg md:text-xl font-bold text-white drop-shadow-md">
+                        <p className="mt-2 text-base md:text-lg font-bold text-white drop-shadow-md">
                             Barang Ketinggalan? TipSkuy-in Aja! <br />Titipnya Murah, <br />yang Bawa Untung
                         </p>
                     </div>
@@ -25,7 +24,6 @@ const CardAdvertising = () => {
                     </button>                
                 </div>
              </div>
-        </main>
     );
 };
 

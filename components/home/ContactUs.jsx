@@ -4,10 +4,8 @@ import { FaWhatsapp, FaTiktok, FaFacebook, FaYoutube } from "react-icons/fa";
 
 const ContactUs = () => {
   return (
-    <div className="-mx-4 md:-mx-6 w-screen w-full bg-[#FFEBEB] border-y-2 border-[#00A3FF] py-16 px-6 flex justify-center mt-10">
-      
-      <div className="w-full max-w-5xl flex flex-col items-center">
-        
+    <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-[#FFEBEB] border-y-2 border-[#00A3FF] py-16 flex justify-center mt-10">
+      <div className="w-full max-w-6xl flex flex-col items-center">
         <h2 className="font-extrabold text-4xl mb-12 text-black">
           Contact Us
         </h2>
@@ -62,7 +60,9 @@ const ContactUs = () => {
 
         </div>
       </div>
-    </div>
+
+      </div>
+
   );
 };
 
