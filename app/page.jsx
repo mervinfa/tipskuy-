@@ -9,7 +9,7 @@ import ContactUs from "@/components/home/ContactUs"
 
 export default function Home() {
   return (
-    <div id="main-page" className="min-h-screen bg-white flex flex-col overflow-x-hidden">
+    <div id="main-page" className="min-h-screen bg-white flex flex-col overflow-x-hidden scroll-smooth">
       
       <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6 flex flex-col gap-1">
         <Navbar/> 
@@ -21,12 +21,18 @@ export default function Home() {
             <CardReview/>
           </div>
         </div>
+
         <div className="">
           <CardAbout />
         </div>
 
-          <CardAboutInfo />
+        <div id="about" className="scroll-mt-28 md:scroll-mt-16">
+            <CardAboutInfo />
+        </div>
+
+        <div id="contact" className="scroll-mt-28 md:scroll-mt-32">
           <ContactUs />
+        </div>
 
       </main>
 
