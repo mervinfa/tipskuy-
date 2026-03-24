@@ -152,8 +152,8 @@ const PaymentMethode = ({ isOpen, onClose, onBack, onNext }) => {
                 {[
                   { id: 'gopay', src: '/images/avatars/gopay.png', alt: 'GoPay' },
                   { id: 'ovo', src: '/images/avatars/ovo.png', alt: 'OVO' },
-                  { id: 'ovo', src: '/images/avatars/dana.png', alt: 'DANA' },
-                  { id: 'ovo', src: '/images/avatars/qris.png', alt: 'QRIS' },
+                  { id: 'dana', src: '/images/avatars/dana.png', alt: 'DANA' },
+                  { id: 'qris', src: '/images/avatars/qris.png', alt: 'QRIS' },
                 ].map((ewallet) => (
                   <label key={ewallet.id} className="w-[60px] h-[45px] md:w-[70px] md:h-[50px] border-[2px] border-black bg-white rounded-md flex items-center justify-center cursor-pointer hover:bg-gray-200 relative shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
                      <input type="radio" name="payment" className="absolute top-1 left-1 w-2.5 h-2.5 accent-blue-600" />

@@ -3,29 +3,36 @@ import React, { useState } from 'react';
 import PopUpTitip from "@/components/caridriver/PopUpTitip"; 
 import PaymentMethode from "@/components/caridriver/PaymentMethode"; 
 import PopUpQR from "@/components/caridriver/PopUpQR"; 
+import PopUpSuccess from "@/components/caridriver/PopUpSuccess";
 
 const DriverList = () => {
   const [isTitipOpen, setIsTitipOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   // Tambahkan state untuk pop up ketiga
   const [isQROpen, setIsQROpen] = useState(false); 
+  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
 
-  // Fungsi dari Tahap 1 ke Tahap 2
   const handleNextStep = () => {
     setIsTitipOpen(false);
     setIsPaymentOpen(true);
   };
 
-  // Fungsi Kembali dari Tahap 2 ke Tahap 1
+  // Fungsi Payment -> Balik ke Form
   const handleBackStep = () => {
     setIsPaymentOpen(false);
     setIsTitipOpen(true);
   };
 
-  // Fungsi dari Tahap 2 ke Tahap 3 (QR)
+  // Fungsi Payment -> QR
   const handlePaymentSubmit = () => {
     setIsPaymentOpen(false);
     setIsQROpen(true);
+  };
+
+  // 3. Fungsi QR -> Success
+  const handleQRDone = () => {
+    setIsQROpen(false);
+    setIsSuccessOpen(true);
   };
 
   const drivers = [
@@ -105,22 +112,20 @@ const DriverList = () => {
       </div>
 
       <PopUpTitip 
-        isOpen={isTitipOpen} 
-        onClose={() => setIsTitipOpen(false)} 
-        onNext={handleNextStep} 
+        isOpen={isTitipOpen} onClose={() => setIsTitipOpen(false)} onNext={handleNextStep} 
       />
 
       <PaymentMethode 
-        isOpen={isPaymentOpen} 
-        onClose={() => setIsPaymentOpen(false)} 
-        onBack={handleBackStep}
-        onNext={handlePaymentSubmit} // Tambahkan ini agar saat di-klik tombol 'Bayar', lanjut ke QR
+        isOpen={isPaymentOpen} onClose={() => setIsPaymentOpen(false)} onBack={handleBackStep} onNext={handlePaymentSubmit} 
       />
 
-      {/* Pop Up Tahap Akhir */}
       <PopUpQR 
-        isOpen={isQROpen} 
-        onClose={() => setIsQROpen(false)} 
+        isOpen={isQROpen} onClose={() => setIsQROpen(false)} onNext={handleQRDone} // Sambungkan ke handleQRDone
+      />
+
+      {/* Pop Up Tahap Akhir (Sukses) */}
+      <PopUpSuccess 
+        isOpen={isSuccessOpen} onClose={() => setIsSuccessOpen(false)} 
       />
 
     </div>

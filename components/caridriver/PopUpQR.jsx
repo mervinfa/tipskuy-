@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaTimes } from 'react-icons/fa';
 
-const PopUpQR = ({ isOpen, onClose }) => {
+const PopUpQR = ({ isOpen, onClose, onNext }) => {
   if (!isOpen) return null; 
 
   return (
@@ -70,6 +70,10 @@ const PopUpQR = ({ isOpen, onClose }) => {
 
           {/* Garis Pembatas Bawah */}
           <hr className="w-full border-t-[3px] border-black mt-2" />
+
+        <button onClick={onNext} className="bg-[#B7FF8E] hover:bg-[#6FAF4F] text-black font-extrabold text-xl py-3 px-10 border-[3px] border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all w-full md:w-max">
+            Saya Sudah Bayar
+        </button>
 
         </div>
 
