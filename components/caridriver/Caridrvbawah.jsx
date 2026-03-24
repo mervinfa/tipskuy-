@@ -12,6 +12,11 @@ const DriverList = () => {
     setIsPaymentOpen(true);
   };
 
+  const handleBackStep = () => {
+    setIsPaymentOpen(false); // Tutup form pembayaran
+    setIsTitipOpen(true);    // Buka kembali form data barang
+  };
+
   const drivers = [
     { id: 1, name: "Ardi Poke", origin: "Pekalongan", dest: "Semarang", time: "16:45", arrival: "17:55", date: "20 Maret 2026", duration: "1j 10m", status: "active" },
     { id: 2, name: "Penur", origin: "Pekalongan", dest: "Semarang", time: "16:45", arrival: "17:55", date: "20 Maret 2026", duration: "1j 10m", status: "active" },
@@ -97,6 +102,7 @@ const DriverList = () => {
       <PaymentMethode 
         isOpen={isPaymentOpen} 
         onClose={() => setIsPaymentOpen(false)} 
+        onBack={handleBackStep} // 2. OPER FUNGSINYA KE SINI
       />
 
     </div>

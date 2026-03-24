@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaTimes } from 'react-icons/fa';
 
-const PaymentMethode = ({ isOpen, onClose }) => {
+const PaymentMethode = ({ isOpen, onClose, onBack }) => {
   if (!isOpen) return null; 
 
   return (
@@ -61,9 +61,14 @@ const PaymentMethode = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          <button className="hidden md:block bg-[#A0522D] hover:bg-[#8B4513] text-black font-extrabold text-xl py-2 px-10 border-[3px] border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all mt-4 w-max">
-            Next
-          </button>
+          <div className="hidden md:flex gap-4 mt-4">
+            <button onClick={onBack} className="bg-white hover:bg-gray-200 text-black font-extrabold text-xl py-2 px-8 border-[3px] border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all">
+              Kembali
+            </button>
+            <button className="bg-[#B7FF8E] hover:bg-[#6FAF4F] text-black font-extrabold text-xl py-2 px-10 border-[3px] border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all w-max">
+              Bayar
+            </button>
+          </div>
 
         </div>
 
@@ -103,9 +108,14 @@ const PaymentMethode = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-              <button className="md:hidden bg-[#A0522D] hover:bg-[#8B4513] text-black font-extrabold text-xl py-3 px-10 border-[3px] border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all mt-6 w-full text-center">
-            Next
-          </button>
+         <div className="md:hidden flex flex-col gap-4 mt-6">
+            <button className="bg-[#B7FF8E] hover:bg-[#6FAF4F] text-black font-extrabold text-xl py-3 px-10 border-[3px] border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all w-full text-center">
+              Bayar
+            </button>
+            <button onClick={onBack} className="bg-white hover:bg-gray-200 text-black font-extrabold text-xl py-3 px-10 border-[3px] border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all w-full text-center">
+              Kembali
+            </button>
+          </div>
 
         </div>
 
