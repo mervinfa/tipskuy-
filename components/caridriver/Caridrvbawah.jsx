@@ -2,19 +2,30 @@
 import React, { useState } from 'react';
 import PopUpTitip from "@/components/caridriver/PopUpTitip"; 
 import PaymentMethode from "@/components/caridriver/PaymentMethode"; 
+import PopUpQR from "@/components/caridriver/PopUpQR"; 
 
 const DriverList = () => {
   const [isTitipOpen, setIsTitipOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  // Tambahkan state untuk pop up ketiga
+  const [isQROpen, setIsQROpen] = useState(false); 
 
+  // Fungsi dari Tahap 1 ke Tahap 2
   const handleNextStep = () => {
     setIsTitipOpen(false);
     setIsPaymentOpen(true);
   };
 
+  // Fungsi Kembali dari Tahap 2 ke Tahap 1
   const handleBackStep = () => {
-    setIsPaymentOpen(false); // Tutup form pembayaran
-    setIsTitipOpen(true);    // Buka kembali form data barang
+    setIsPaymentOpen(false);
+    setIsTitipOpen(true);
+  };
+
+  // Fungsi dari Tahap 2 ke Tahap 3 (QR)
+  const handlePaymentSubmit = () => {
+    setIsPaymentOpen(false);
+    setIsQROpen(true);
   };
 
   const drivers = [
@@ -102,7 +113,14 @@ const DriverList = () => {
       <PaymentMethode 
         isOpen={isPaymentOpen} 
         onClose={() => setIsPaymentOpen(false)} 
-        onBack={handleBackStep} // 2. OPER FUNGSINYA KE SINI
+        onBack={handleBackStep}
+        onNext={handlePaymentSubmit} // Tambahkan ini agar saat di-klik tombol 'Bayar', lanjut ke QR
+      />
+
+      {/* Pop Up Tahap Akhir */}
+      <PopUpQR 
+        isOpen={isQROpen} 
+        onClose={() => setIsQROpen(false)} 
       />
 
     </div>
