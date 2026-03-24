@@ -14,7 +14,7 @@ const PopUpTitip = ({ isOpen, onClose, onNext }) => {
         {/* 3. Tombol X (Close) Disamakan persis warnanya dan letaknya */}
         <button 
           onClick={onClose}
-          className="absolute top-1 left-1 bg-red-600 hover:bg-red-700 text-white p-1 border-[3px] border-black rounded-md shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all"
+          className="absolute top-1 right-3 bg-red-600 hover:bg-red-700 text-white p-1 border-[3px] border-black rounded-md shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all"
         >
           <FaTimes size={24} />
         </button>
