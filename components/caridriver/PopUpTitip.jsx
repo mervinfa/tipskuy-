@@ -9,7 +9,7 @@ const PopUpTitip = ({ isOpen, onClose, onNext }) => {
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-all">
       
       {/* 2. Container Utama Disamakan (bg-[#FFB041], border-[4px], rounded-xl) */}
-      <div className="relative w-full max-w-4xl bg-[#FFB041] border-[4px] border-black rounded-xl p-6 md:p-12 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col md:flex-row gap-8 max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-4xl bg-[#FFB041] border-[4px] border-black rounded-xl p-6 md:p-12 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col md:flex-row gap-8 max-h-[100vh] overflow-y-auto animate-in zoom-in-95 duration-200">
         
         {/* 3. Tombol X (Close) Disamakan persis warnanya dan letaknya */}
         <button 
@@ -54,8 +54,32 @@ const PopUpTitip = ({ isOpen, onClose, onNext }) => {
             </div>
           </div>
           
-          <p className="text-xs font-bold italic text-black">*Noted : Barang tidak boleh lebih dari 5kg</p>
+          <p className="text-xs font-bold italic text-black">*Noted : Berat tidak boleh dari 1 kg,jika lebih maka akan ada biaya tambahan</p>
           
+          <div className="flex flex-col gap-1">
+            <label className="font-extrabold text-black text-base md:text-lg">Nama Penerima</label>
+            <div className="flex border-[3px] border-black rounded-md overflow-hidden bg-white h-10 md:h-12 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <div className="w-12 bg-[#D9D9D9] border-r-[3px] border-black flex-shrink-0"></div>
+              <input type="text" placeholder="Nama Penerima" className="flex-1 px-3 outline-none text-black font-medium" />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="font-extrabold text-black text-base md:text-lg">No Handphone</label>
+            <div className="flex border-[3px] border-black rounded-md overflow-hidden bg-white h-10 md:h-12 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <div className="w-12 bg-[#D9D9D9] border-r-[3px] border-black flex-shrink-0"></div>
+              <input type="text" placeholder="No Handphone" className="flex-1 px-3 outline-none text-black font-medium" />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="font-extrabold text-black text-base md:text-lg">Alamat Penerima</label>
+            <div className="flex border-[3px] border-black rounded-md overflow-hidden bg-white h-10 md:h-12 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <div className="w-12 bg-[#D9D9D9] border-r-[3px] border-black flex-shrink-0"></div>
+              <input type="text" placeholder="Alamat" className="flex-1 px-3 outline-none text-black font-medium" />
+            </div>
+          </div>
+
           {/* TOMBOL DESKTOP */}
           <button onClick={onNext} className="hidden md:block bg-[#A0522D] hover:bg-[#8B4513] text-black font-extrabold text-xl py-2 px-10 border-[3px] border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all mt-4 w-max">
             Next
@@ -63,7 +87,7 @@ const PopUpTitip = ({ isOpen, onClose, onNext }) => {
         </div>
 
         {/* --- KOLOM KANAN (UPLOAD FOTO) --- */}
-        <div className="flex flex-col w-full md:w-1/2 pt-4 md:pt-0">
+        <div className="flex flex-col w-full md:w-1/2 pt-4 md:pt-0 h-100">
           <label className="font-extrabold text-black text-base md:text-lg mb-2">Unggah Foto</label>
           
           <div className="bg-gray-300 border-[3px] border-black rounded-xl p-4 md:p-6 flex-grow flex flex-col gap-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
