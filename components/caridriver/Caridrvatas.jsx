@@ -15,7 +15,7 @@ const TipskuySearch = () => {
   };
 
   return (
-    <div className="bg-[#A5F3FC] p-8 rounded-xl border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] max-w-5xl mx-auto font-sans mt-24">
+    <div className="bg-[#A5F3FC] p-8 rounded-xl border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] max-w-5xl mx-auto font-sans mt-4">
       <h2 className="text-3xl font-extrabold mb-6 text-black">Titip di Tipskuy!</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
         <div className="flex flex-col gap-2">
