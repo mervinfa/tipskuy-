@@ -1,6 +1,10 @@
-import React from 'react';
+"use client"; 
+import React, { useState } from 'react';
+import PopUpChat from "@/components/caridriver/PopUpChat";
 
 const LiveProgress = () => {
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
   return (
     <div className="w-full max-w-5xl mx-auto bg-[#FFB041] border-[4px] border-black rounded-xl p-6 md:p-8 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] relative animate-in fade-in slide-in-from-top-4 duration-500 mt-24">
 
@@ -41,11 +45,13 @@ const LiveProgress = () => {
       
      
       <div className="mt-8 flex justify-end md:absolute md:top-6 md:right-6 md:mt-0">
-        <button className="bg-[#22C55E] hover:bg-[#16A34A] text-black font-extrabold text-sm md:text-base py-2 px-4 md:px-6 border-[3px] border-black rounded-lg shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all">
+        <button 
+            onClick={() => setIsChatOpen(true)}
+            className="bg-[#22C55E] hover:bg-[#16A34A] text-black font-extrabold text-sm md:text-base py-2 px-4 md:px-6 border-[3px] border-black rounded-lg shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all">
           Chat Driver
         </button>
       </div>
-
+        <PopUpChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />  
     </div>
   );
 };
