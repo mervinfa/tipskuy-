@@ -7,7 +7,7 @@ const PaymentMethode = ({ isOpen, onClose, onBack, onNext }) => {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-all">
       
-      <div className="relative w-full max-w-4xl bg-[#FFB041] border-[4px] border-black rounded-xl p-6 md:p-12 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col md:flex-row gap-8 max-h-[100vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-4xl bg-[#FFB041] border-[4px] border-black rounded-xl p-6 md:p-12 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col md:flex-row gap-8 max-h-[85vh] md:max-h-[100vh] overflow-y-auto animate-in zoom-in-95 duration-200">
         
         <button 
           onClick={onClose}
@@ -181,7 +181,7 @@ const PaymentMethode = ({ isOpen, onClose, onBack, onNext }) => {
           </div>
 
          <div className="md:hidden flex flex-col gap-4 mt-6">
-            <button className="bg-[#B7FF8E] hover:bg-[#6FAF4F] text-black font-extrabold text-xl py-3 px-10 border-[3px] border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all w-full text-center">
+            <button onClick={onNext} className="bg-[#B7FF8E] hover:bg-[#6FAF4F] text-black font-extrabold text-xl py-3 px-10 border-[3px] border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all w-full text-center">
               Bayar
             </button>
             <button onClick={onBack} className="bg-white hover:bg-gray-200 text-black font-extrabold text-xl py-3 px-10 border-[3px] border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all w-full text-center">

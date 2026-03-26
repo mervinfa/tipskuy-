@@ -5,13 +5,10 @@ const PopUpTitip = ({ isOpen, onClose, onNext }) => {
   if (!isOpen) return null;
 
   return (
-    // 1. Overlay (Background Gelap) Disamakan persis z-[100]
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-all">
       
-      {/* 2. Container Utama Disamakan (bg-[#FFB041], border-[4px], rounded-xl) */}
-      <div className="relative w-full max-w-4xl bg-[#FFB041] border-[4px] border-black rounded-xl p-6 md:p-12 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col md:flex-row gap-8 max-h-[100vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-4xl bg-[#FFB041] border-[4px] border-black rounded-xl p-6 md:p-12 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col md:flex-row gap-8 max-h-[85vh] md:max-h-[100vh] overflow-y-auto animate-in zoom-in-95 duration-200">
         
-        {/* 3. Tombol X (Close) Disamakan persis warnanya dan letaknya */}
         <button 
           onClick={onClose}
           className="absolute top-1 right-3 bg-red-600 hover:bg-red-700 text-white p-1 border-[3px] border-black rounded-md shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none transition-all"
