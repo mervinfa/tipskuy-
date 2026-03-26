@@ -133,11 +133,10 @@ const PaymentMethode = ({ isOpen, onClose, onBack, onNext }) => {
                   <label key={bank.id} className="w-[60px] h-[45px] md:w-[70px] md:h-[50px] border-[2px] border-black bg-white rounded-md flex items-center justify-center cursor-pointer hover:bg-gray-200 relative shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
                     <input type="radio" name="payment" className="absolute top-1 left-1 w-2.5 h-2.5 accent-blue-600" />
                     
-                    {/* 2. GANTI SPAN MENJADI TAG IMG */}
                     <img 
                       src={bank.src} 
                       alt={bank.alt} 
-                      className="w-7 h-auto object-contain mt-2" // Atur ukuran w-10 sesuai selera
+                      className="w-7 h-auto object-contain mt-2" 
                     />
                     
                   </label>

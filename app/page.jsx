@@ -6,6 +6,7 @@ import Footer from "@/components/Footer"
 import CardAbout from "@/components/home/CardAbout"
 import CardAboutInfo from "@/components/home/CardAboutInfo"
 import ContactUs from "@/components/home/ContactUs"
+import Advertising from "@/components/home/Advertising"
 
 export default function Home() {
   return (
@@ -21,15 +22,16 @@ export default function Home() {
             <CardReview/>
           </div>
         </div>
-
-        <div className="">
-          <CardAbout />
-        </div>
+        <Advertising/>
 
         <div id="about" className="scroll-mt-28 md:scroll-mt-14">
             <CardAboutInfo />
         </div>
 
+        <div className="">
+          <CardAbout />
+        </div>
+        
         <div id="contact" className="scroll-mt-28 md:scroll-mt-32">
           <ContactUs />
         </div>

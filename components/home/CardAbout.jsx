@@ -16,7 +16,7 @@ const CardAbout = () => {
   }, [images.length]);
 
   return (
-    <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-[#FFF1F1] border-2 border-gray-100 p-8 md:p-[150px] flex flex-col md:flex-row items-center gap-12 mt-18">
+    <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] bg-[#FFF1F1] border-2 border-gray-100 p-8 md:p-[150px] flex flex-col md:flex-row items-center gap-12 mt-18 ">
       <div className='w-full max-w-7xl mx-auto px-4 md:px-6 flex flex-col md:flex-row items-center gap-12'>
       
       <div className="w-full md:w-1/2 mx-18 flex flex-col items-center text-center">
@@ -35,7 +35,7 @@ const CardAbout = () => {
           <img 
             src={images[currentIndex]} 
             alt="Slider" 
-            className="w-full aspect-video object-cover transition-all duration-700 ease-in-out"
+            className="w-full aspect-video object-cover transition-all duration-700 ease-in-out "
           />
           
           <div className="flex h-3 w-full">

@@ -2,7 +2,7 @@ import React from 'react';
 
 const PhotoCard= () => {
   return (
-    <div className="bg-white rounded-xl border border-black p-3 shadow-lg w-full max-w-[320px]">
+    <div className="bg-white rounded-xl border border-black p-2 m-3 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] w-full max-w-[250px] h-full max-h-[150px]">
       <div className="flex gap-3">
         
         <div className="flex-shrink-0">
@@ -12,12 +12,12 @@ const PhotoCard= () => {
         </div>
 
         <div className="flex flex-col">
-          <h3 className="font-bold text-base leading-tight">Ardi Poke</h3>
+          <h3 className="font-bold text-xs leading-tight">Ardi Poke</h3>
           <p className="text-xs mt-1 text-gray-800">
-            Penyelamat buat si pelupa! Kunci ketinggalan di rumah, langsung beres lewat TipSkuy. Harganya murah, prosesnya sat-set, dan yang bantu bawain ramah banget. Sangat direkomendasikan!
+            Penyelamat buat si pelupa! Kunci ketinggalan di rumah, langsung beres lewat TipSkuy. Harganya murah, prosesnya sat-set sangat direkomendasikan!
           </p>
           
-          <div className="flex justify-end gap-1 mt-3 text-yellow-400 text-sm">
+          <div className="flex justify-end gap-1 mt-1 text-yellow-400 text-sm">
             ⭐ ⭐ ⭐ ⭐ ⭐
           </div>
         </div>

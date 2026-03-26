@@ -5,7 +5,7 @@ const ContactUs = () => {
   return (
     <div className="relative w-full mt-10 md:mt-16">
       
-      <div className="absolute inset-y-0 left-[-50vw] right-[-50vw] bg-[#FFEBEB]"></div>
+      <div className="absolute inset-y-0 left-[-50vw] right-[-50vw] "></div>
 
       <div className="relative w-full flex flex-col items-center py-16">
         

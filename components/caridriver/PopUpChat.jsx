@@ -33,7 +33,6 @@ const PopUpChat = ({ isOpen, onClose, driverName = "Ardi Poke" }) => {
         </div>
 
         {/* --- BODY CHAT (Tempat Balasan) --- */}
-        {/* Tinggi scrollable disesuaikan agar pas di layar HP */}
         <div className="bg-[#D1D5DB] p-4 flex flex-col gap-4 h-[50vh] md:h-[400px] overflow-y-auto">
           
           {/* Chat Masuk (Putih, Kiri) */}
