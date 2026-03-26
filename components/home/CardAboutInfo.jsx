@@ -32,16 +32,16 @@ const CardAboutInfo = () => {
         </div>
       </div>
 
-      <h2 className="font-extrabold text-5xl md:text-5xl text-black mt-3">
+      <h2 className="font-extrabold text-5xl md:text-5xl text-black mt-2">
         Visi & Misi Kami
       </h2>
 
-      <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mt-4">
+      <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mt-2">
         
         <div className="w-full bg-[#FFA3D4] border-2 border-gray-600 rounded-xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col p-5 md:p-8">
           <div className="flex items-center gap-4 mb-3">
             <div className="bg-white border border-gray-400 p-2 rounded-lg">
-              <img src="https://cdn-icons-png.flaticon.com/512/1161/1161388.png" alt="Icon Aman" className="w-8 h-8 object-contain" />
+              <img src="https://cdn-icons-png.flaticon.com/512/1161/1161388.png" alt="Icon Aman" className="w-10 h-10 object-contain" />
             </div>
             <h3 className="font-extrabold text-xl md:text-2xl text-black">Aman</h3>
           </div>
@@ -53,7 +53,7 @@ const CardAboutInfo = () => {
         <div className="w-full bg-[#FFF89A] border-2 border-gray-600 rounded-xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col p-5 md:p-8">
           <div className="flex items-center gap-4 mb-3">
             <div className="bg-white border border-gray-400 p-2 rounded-lg">
-              <img src="https://cdn-icons-png.flaticon.com/512/3284/3284615.png" alt="Icon Cepat" className="w-8 h-8 object-contain" />
+              <img src="https://cdn-icons-png.flaticon.com/512/3284/3284615.png" alt="Icon Cepat" className="w-10 h-10 object-contain" />
             </div>
             <h3 className="font-extrabold text-xl md:text-2xl text-black">Cepat</h3>
           </div>
@@ -65,7 +65,7 @@ const CardAboutInfo = () => {
         <div className="w-full bg-[#B9FF9A] border-2 border-gray-600 rounded-xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col p-5 md:p-8">
           <div className="flex items-center gap-4 mb-3">
             <div className="bg-white border border-gray-400 p-2 rounded-lg">
-              <img src="https://cdn-icons-png.flaticon.com/512/2953/2953363.png" alt="Icon Hemat" className="w-8 h-8 object-contain" />
+              <img src="https://cdn-icons-png.flaticon.com/512/2953/2953363.png" alt="Icon Hemat" className="w-10 h-10 object-contain" />
             </div>
             <h3 className="font-extrabold text-xl md:text-2xl text-black">Hemat</h3>
           </div>

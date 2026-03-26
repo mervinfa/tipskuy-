@@ -1,3 +1,18 @@
+# Tipskuy! - Platform Jasa Titip dan Pengiriman Barang Antar Kota
+## Institusi
+Universitas Dian Nuswantoro
+## Anggota Tim
+- Ketua: Mervin Fauzhan Atkly
+- Anggota 1: Nama Anggota
+- Anggota 2: Nama Anggota
+## Deskripsi Karya
+Deskripsi karya menjelaskan latar belakang, tujuan, manfaat, serta pemilihan subtema yang
+melandasi pembuatan Website ini.
+## Link Website
+https://link-Website -hasil-deploy
+
+
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

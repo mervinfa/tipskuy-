@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 const CardAbout = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const images = [
-    "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=800",
-    "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=800"
+    "/images/blog/give.png",
+    "/images/blog/find.png",
+     "/images/blog/with.png"
   ];
 
   useEffect(() => {
