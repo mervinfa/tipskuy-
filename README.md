@@ -29,7 +29,7 @@ Fitur Unggulan Sistem:
 4. Sistem pembayaran terpusat (Transfer, E-Wallet, QRIS) dan fitur obrolan langsung (Chat Driver) untuk menjamin keamanan transaksi.
 
 ## Link Website
-https://link-Website -hasil-deploy
+https://tipskuy.vercel.app -hasil-deploy
 
 
 ## Getting Started
