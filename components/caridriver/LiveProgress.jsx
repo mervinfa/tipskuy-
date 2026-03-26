@@ -8,7 +8,7 @@ const LiveProgress = () => {
   const [isCancelOpen, setIsCancelOpen] = useState(false);
 
   return (
-    <div className="w-full max-w-5xl mx-auto bg-[#FFB041] border-[4px] border-black rounded-xl p-6 md:p-8 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] relative animate-in fade-in slide-in-from-top-4 duration-500 mt-24">
+    <div className="w-full max-w-5xl mx-auto bg-[#FFB041] border-[4px] border-black rounded-xl p-6 md:p-8 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] sticky top-32 z-[80] mb-4 mt-12 animate-in fade-in slide-in-from-top-4 duration-500 hover:bg-yellow-100">
 
       <h2 className="text-2xl md:text-4xl font-extrabold text-black text-center mb-10 md:mb-12 mt-2 md:mt-0">
         Live Progress Titip

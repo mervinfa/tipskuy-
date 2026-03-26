@@ -61,15 +61,14 @@ const DriverList = ({ onTransactionSuccess }) => {
       <div className="bg-[#D1FAE5] p-6 md:p-8 rounded-xl border-[3px] border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] mt-5">
         
         <div className="grid grid-cols-4 gap-4 bg-[#D1D5DB] p-3 rounded-lg border-[3px] border-black mb-6 text-base md:text-xl font-extrabold text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hidden md:grid">
-          <div className="text-left px-8">Driver</div>
-          <div>Berangkat</div>
+          <div className="text-center pl-6">Driver</div>
+          <div className='text-center'>Berangkat</div>
           <div className="text-center">Durasi</div>
           <div>Tiba</div>
         </div>
 
         <div className="flex flex-col gap-4">
           {drivers.map((driver) => (
-            // 2. PERBAIKAN: Tag <div key={...}> sudah dipindah ke sini dengan benar
             <div 
               key={driver.id}
               className={`grid grid-cols-1 md:grid-cols-4 items-center gap-4 p-4 md:p-6 rounded-xl border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all
@@ -77,7 +76,7 @@ const DriverList = ({ onTransactionSuccess }) => {
             >
               
               {/* Kolom Driver */}
-              <div className="flex md:flex-col items-center md:items-start gap-4 md:gap-2 justify-start p-2">
+              <div className="flex md:flex-col items-center md:items-center gap-4 md:gap-2 justify-start p-2">
                 <div className="w-14 h-14 rounded-full border-[3px] border-black overflow-hidden bg-white flex-shrink-0">
                   <img 
                     src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${driver.name}`} 
@@ -85,13 +84,13 @@ const DriverList = ({ onTransactionSuccess }) => {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="text-xl font-extrabold text-black md:text-left leading-tight">
+                <div className="text-xl font-extrabold text-black text-center md:text-center leading-tight ">
                   {driver.name}
                 </div>
               </div>
 
               {/* Kolom Berangkat */}
-              <div className="text-sm md:text-lg text-black">
+              <div className="text-sm md:text-lg text-black md:pl-14">
                 <p className="font-medium">{driver.origin}</p>
                 <p className="font-extrabold text-xl">{driver.time}</p>
                 <p className="font-medium">{driver.date}</p>
