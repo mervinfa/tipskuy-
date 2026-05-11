@@ -1,0 +1,106 @@
+// file: prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. TABEL PENGGUNA (Bisa jadi Customer atau Driver)
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  phone_number String   @unique
+  role         Role     @default(CUSTOMER)
+  created_at   DateTime @default(now())
+  
+  // Relasi
+  trips        Trip[]   // 1 User bisa buat banyak jadwal (sebagai Driver)
+  orders       Order[]  // 1 User bisa titip banyak barang (sebagai Pengirim)
+}
+
+// 2. TABEL JADWAL DRIVER (Muncul di daftar pencarian)
+model Trip {
+  id               Int        @id @default(autoincrement())
+  driver_id        Int
+  origin_city      String
+  destination_city String
+  departure_time   String     // Contoh: "16:45"
+  arrival_time     String     // Contoh: "17:55"
+  trip_date        String     // Contoh: "20 Maret 2026"
+  max_capacity_kg  Float      @default(10.0)
+  status           TripStatus @default(ACTIVE)
+
+  // Relasi
+  driver           User       @relation(fields: [driver_id], references: [id])
+  orders           Order[]    // 1 Jadwal bisa diisi banyak titipan barang
+}
+
+// 3. TABEL PESANAN / TITIPAN BARANG (Dari PopUpTitip)
+model Order {
+  id               String      @id // Format kustom, contoh: "TSK-20260325-01"
+  sender_id        Int
+  trip_id          Int
+  item_name        String
+  item_weight_kg   Float
+  receiver_name    String
+  receiver_phone   String
+  receiver_address String
+  total_price      Int
+  tracking_status  OrderStatus @default(WAITING_PAYMENT)
+  created_at       DateTime    @default(now())
+
+  // Relasi
+  sender           User        @relation(fields: [sender_id], references: [id])
+  trip             Trip        @relation(fields: [trip_id], references: [id])
+  payment          Payment?    // Relasi 1-to-1 dengan tabel Payment
+}
+
+// 4. TABEL PEMBAYARAN (Dari PaymentMethode & PopUpQR)
+model Payment {
+  id             Int           @id @default(autoincrement())
+  order_id       String        @unique 
+  payment_method PaymentMethod
+  payment_status PaymentStatus @default(PENDING)
+  paid_at        DateTime?
+
+  // Relasi
+  order          Order         @relation(fields: [order_id], references: [id])
+}
+
+// --- KUMPULAN PILIHAN TETAP (ENUM) ---
+
+enum Role {
+  CUSTOMER
+  DRIVER
+}
+
+enum TripStatus {
+  ACTIVE
+  FULL
+  COMPLETED
+}
+
+enum OrderStatus {
+  WAITING_PAYMENT
+  PAID
+  ON_DELIVERY
+  ARRIVED
+  CANCELED
+}
+
+enum PaymentMethod {
+  QRIS
+  TRANSFER_BANK
+  EWALLET
+  GERAI
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
