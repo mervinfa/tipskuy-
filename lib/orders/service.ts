@@ -159,17 +159,18 @@ async function runWithTransactionFallback<T>(
 // ---------- Create ----------
 
 export async function createOrder(userId: string, input: CreateOrderInput) {
+  for (const item of input.items) {
+    parseStorageUrl(item.imageUrl, "items", userId);
+  }
+  const trip = await prisma.tripListing.findFirst({
+    where: { id: input.tripId, isActive: true },
+    include: { driver: { select: { userId: true } } },
+  });
+  if (!trip) {
+    throw new AppError(404, "NOT_FOUND", "Trip tidak ditemukan atau tidak aktif");
+  }
+
   const orderId = await runWithTransactionFallback(async (tx) => {
-    const trip = await tx.tripListing.findFirst({
-      where: { id: input.tripId, isActive: true },
-      include: { driver: { select: { userId: true } } },
-    });
-    if (!trip) {
-      throw new AppError(404, "NOT_FOUND", "Trip tidak ditemukan atau tidak aktif");
-    }
-    for (const item of input.items) {
-      parseStorageUrl(item.imageUrl, "items", userId);
-    }
     const created = await tx.order.create({
       data: {
         customerId: userId,
