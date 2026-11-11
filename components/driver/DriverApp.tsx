@@ -5,11 +5,11 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  Banknote,
   CheckCircle2,
   Clock,
   Loader2,
   MapPin,
+  MessageCircle,
   Package,
   Plus,
   RefreshCw,
@@ -22,16 +22,17 @@ import { formatDateTime, isClosedStatus, serviceLabel } from "@/components/app/f
 import { ImageUpload } from "@/components/app/ImageUpload";
 import { EMPTY_CITY, isCityReady, RegionSelect } from "@/components/app/RegionSelect";
 import { StatusBadge } from "@/components/app/StatusBadge";
+import { ChatModal } from "@/components/chat/ChatModal";
 import { MapView, toMapPoint } from "@/components/map/MapView";
 import { useMe } from "@/components/app/useMe";
 import type {
   CityValue,
+  ConversationSummary,
   MyTrip,
   OpenRequest,
   OrderDetail,
   OrderListItem,
   ServiceType,
-  Wallet,
 } from "@/components/app/types";
 import { formatRupiah } from "@/lib/format";
 
@@ -83,14 +84,14 @@ export function DriverApp() {
   const [openRequestsError, setOpenRequestsError] = useState<string | null>(null);
   const [loadingRequests, setLoadingRequests] = useState(false);
 
-  const [wallet, setWallet] = useState<Wallet | null>(null);
-  const [walletError, setWalletError] = useState<string | null>(null);
-  const [loadingWallet, setLoadingWallet] = useState(false);
-  const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [withdrawBank, setWithdrawBank] = useState("BCA");
-  const [withdrawAccount, setWithdrawAccount] = useState("");
-  const [withdrawBusy, setWithdrawBusy] = useState(false);
-  const [withdrawMessage, setWithdrawMessage] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+  const [conversationsError, setConversationsError] = useState<string | null>(null);
+  const [loadingConversations, setLoadingConversations] = useState(false);
+  const [chatTarget, setChatTarget] = useState<{
+    conversationId?: string;
+    orderId?: string;
+    title: string;
+  } | null>(null);
 
   const loadTrips = useCallback(async () => {
     setLoadingTrips(true);
@@ -131,16 +132,16 @@ export function DriverApp() {
     }
   }, []);
 
-  const loadWallet = useCallback(async () => {
-    setLoadingWallet(true);
-    setWalletError(null);
+  const loadConversations = useCallback(async () => {
+    setLoadingConversations(true);
+    setConversationsError(null);
     try {
-      const data = await apiGet<Wallet>("/api/wallet?page=1&pageSize=20");
-      setWallet(data);
+      const data = await apiGet<{ items: ConversationSummary[] }>("/api/conversations");
+      setConversations(data.items);
     } catch (error) {
-      setWalletError(apiErrorMessage(error));
+      setConversationsError(apiErrorMessage(error));
     } finally {
-      setLoadingWallet(false);
+      setLoadingConversations(false);
     }
   }, []);
 
@@ -177,13 +178,14 @@ export function DriverApp() {
     void loadTrips();
     void loadOrders();
     void loadOpenRequests();
-    void loadWallet();
+    void loadConversations();
     const timer = window.setInterval(() => {
       void loadOrders();
       void loadOpenRequests();
+      void loadConversations();
     }, 10000);
     return () => window.clearInterval(timer);
-  }, [me, loadTrips, loadOrders, loadOpenRequests, loadWallet]);
+  }, [me, loadTrips, loadOrders, loadOpenRequests, loadConversations]);
 
   useEffect(() => {
     const fromUrl = new URLSearchParams(window.location.search).get("order");
@@ -228,7 +230,7 @@ export function DriverApp() {
   }
 
   async function refreshAfterAction() {
-    await Promise.all([loadOrder(true), loadOrders(), loadTrips(), loadWallet()]);
+    await Promise.all([loadOrder(true), loadOrders(), loadTrips(), loadConversations()]);
   }
 
   async function handleCreateTrip(event: React.FormEvent<HTMLFormElement>) {
@@ -381,33 +383,6 @@ export function DriverApp() {
     }
   }
 
-  async function handleWithdraw(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setWalletError(null);
-    setWithdrawMessage(null);
-    const amount = Number(withdrawAmount);
-    if (!Number.isInteger(amount) || amount < 1) {
-      setWalletError("Jumlah penarikan harus bilangan bulat Rupiah");
-      return;
-    }
-    setWithdrawBusy(true);
-    try {
-      await apiSend("/api/wallet/withdraw", "POST", {
-        amount,
-        bankCode: withdrawBank,
-        accountNumber: withdrawAccount,
-      });
-      setWithdrawAmount("");
-      setWithdrawAccount("");
-      setWithdrawMessage("Penarikan berhasil diproses.");
-      await loadWallet();
-    } catch (error) {
-      setWalletError(apiErrorMessage(error));
-    } finally {
-      setWithdrawBusy(false);
-    }
-  }
-
   if (loadingMe) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -453,27 +428,92 @@ export function DriverApp() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-xl border-[3px] border-black bg-[#FEF08A] p-6 shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]">
+      <section className="rounded-xl border-[3px] border-black bg-[#FEF08A] p-4 shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] md:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-extrabold text-black">Dashboard Driver</h1>
+            <h1 className="text-2xl font-extrabold text-black md:text-3xl">Dashboard Driver</h1>
             <p className="mt-1 text-sm font-medium text-gray-700">
-              Halo {me.name}. Kelola trip, order, dan dompet Anda di sini.
+              Halo {me.name}. Kelola trip, order, dan percakapan Anda di sini.
             </p>
             <p className="mt-2 text-xs font-bold text-gray-600">
               Status verifikasi: {me.driverProfile?.verificationStatus ?? "PENDING"}
             </p>
           </div>
-          <div className="rounded-lg border-2 border-black bg-white p-3 text-right shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-            <p className="text-xs font-bold uppercase text-gray-500">Saldo dompet</p>
-            <p className="text-2xl font-extrabold text-black">
-              {wallet ? formatRupiah(wallet.balance) : "-"}
-            </p>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/driver/wallet" className={buttonPrimary}>
+              <WalletIcon size={16} />
+              Buka dompet
+            </Link>
+            <Link href="/caridriver/postingan" className={buttonNeutral}>
+              Postingan terbuka
+            </Link>
           </div>
         </div>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+      <section className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-xl font-extrabold text-black md:text-2xl">Percakapan</h2>
+          <button
+            type="button"
+            onClick={() => void loadConversations()}
+            className={buttonNeutral}
+            disabled={loadingConversations}
+          >
+            <RefreshCw size={15} className={loadingConversations ? "animate-spin" : ""} />
+            Muat ulang
+          </button>
+        </div>
+        {conversationsError ? (
+          <p className="rounded-lg border-2 border-red-500 bg-red-50 p-3 text-sm font-bold text-red-700">
+            {conversationsError}
+          </p>
+        ) : null}
+        {!loadingConversations && conversations.length === 0 ? (
+          <div className={cardClass}>
+            <p className="text-sm font-bold text-gray-700">Belum ada percakapan.</p>
+            <p className="mt-1 text-xs font-medium text-gray-500">
+              Customer akan menghubungi Anda dari kartu trip atau detail pesanan.
+            </p>
+          </div>
+        ) : null}
+        <div className="grid gap-3 lg:grid-cols-2">
+          {conversations.map((conversation) => (
+            <button
+              key={conversation.id}
+              type="button"
+              onClick={() =>
+                setChatTarget({
+                  conversationId: conversation.id,
+                  title: `Chat dengan ${conversation.customer.name}`,
+                })
+              }
+              className="rounded-xl border-[3px] border-black bg-white p-3 text-left shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-y-0.5"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-extrabold text-black">{conversation.customer.name}</p>
+                <p className="shrink-0 text-[10px] font-semibold text-gray-500">
+                  {formatDateTime(conversation.updatedAt)}
+                </p>
+              </div>
+              <p className="mt-1 text-xs font-medium text-gray-600">
+                {conversation.trip
+                  ? `${conversation.trip.originCity} ke ${conversation.trip.destCity}`
+                  : "Order dari postingan terbuka"}
+              </p>
+              <p className="mt-2 line-clamp-2 rounded-md border-2 border-black bg-gray-50 p-2 text-xs font-medium text-gray-700">
+                {conversation.lastMessage?.body ?? "Belum ada pesan."}
+              </p>
+              <p className="mt-2 flex items-center gap-1 text-xs font-extrabold text-black">
+                <MessageCircle size={14} />
+                Buka chat
+              </p>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section>
         <form className={cardClass} onSubmit={handleCreateTrip}>
           <h2 className="text-2xl font-extrabold text-black">Buka trip baru</h2>
           <p className="mt-1 text-sm font-medium text-gray-600">
@@ -549,7 +589,7 @@ export function DriverApp() {
                 onChange={(event) => setNotes(event.target.value)}
                 rows={2}
                 maxLength={500}
-                className="rounded-md border-2 border-black bg-white p-3 text-sm font-medium outline-none"
+                className="rounded-md border-2 border-black bg-white p-3 text-sm font-medium text-black outline-none placeholder:text-gray-500"
                 placeholder="Contoh: Bisa titip barang kecil sampai sedang"
               />
             </label>
@@ -572,84 +612,6 @@ export function DriverApp() {
           </button>
         </form>
 
-        <div className={cardClass}>
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="text-2xl font-extrabold text-black">Dompet</h2>
-            <button type="button" onClick={() => void loadWallet()} className={buttonNeutral} disabled={loadingWallet}>
-              <RefreshCw size={15} className={loadingWallet ? "animate-spin" : ""} />
-            </button>
-          </div>
-          <div className="mt-3 rounded-lg border-2 border-black bg-[#DCFCE7] p-3">
-            <p className="text-xs font-bold uppercase text-gray-600">Saldo tersedia</p>
-            <p className="text-3xl font-extrabold text-black">{wallet ? formatRupiah(wallet.balance) : "-"}</p>
-          </div>
-
-          <form className="mt-3 space-y-2" onSubmit={handleWithdraw}>
-            <input
-              required
-              type="number"
-              min={1}
-              placeholder="Jumlah penarikan"
-              value={withdrawAmount}
-              onChange={(event) => setWithdrawAmount(event.target.value)}
-              className={`${inputClass} w-full`}
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <select
-                value={withdrawBank}
-                onChange={(event) => setWithdrawBank(event.target.value)}
-                className={inputClass}
-              >
-                <option value="BCA">BCA</option>
-                <option value="BRI">BRI</option>
-                <option value="BNI">BNI</option>
-                <option value="MANDIRI">Mandiri</option>
-                <option value="BSI">BSI</option>
-              </select>
-              <input
-                required
-                inputMode="numeric"
-                pattern="[0-9]{5,20}"
-                placeholder="Nomor rekening"
-                value={withdrawAccount}
-                onChange={(event) => setWithdrawAccount(event.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <button type="submit" disabled={withdrawBusy} className={buttonPrimary}>
-              {withdrawBusy ? <Loader2 size={16} className="animate-spin" /> : <Banknote size={16} />}
-              Tarik saldo
-            </button>
-          </form>
-
-          {withdrawMessage ? (
-            <p className="mt-2 rounded-md border-2 border-green-700 bg-green-50 p-2 text-xs font-bold text-green-800">
-              {withdrawMessage}
-            </p>
-          ) : null}
-          {walletError ? (
-            <p className="mt-2 rounded-md border-2 border-red-500 bg-red-50 p-2 text-xs font-bold text-red-700">
-              {walletError}
-            </p>
-          ) : null}
-
-          <div className="mt-3 max-h-44 space-y-1.5 overflow-y-auto pr-1">
-            {(wallet?.transactions.items ?? []).map((tx) => (
-              <div key={tx.id} className="rounded-md border-2 border-black bg-white p-2 text-xs">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-extrabold text-black">{tx.type === "WITHDRAWAL" ? "Penarikan" : "Dana order"}</span>
-                  <span className={`font-extrabold ${tx.amount < 0 ? "text-red-700" : "text-green-700"}`}>
-                    {formatRupiah(tx.amount)}
-                  </span>
-                </div>
-                <p className="text-[10px] font-medium text-gray-500">{formatDateTime(tx.createdAt)}</p>
-              </div>
-            ))}
-            {wallet && wallet.transactions.items.length === 0 ? (
-              <p className="text-xs font-medium text-gray-500">Belum ada transaksi.</p>
-            ) : null}
-          </div>
-        </div>
       </section>
 
       <section className="space-y-3">
@@ -769,9 +731,24 @@ export function DriverApp() {
                     Customer: {order.customer?.name ?? "-"} - Dibuat {formatDateTime(order.createdAt)}
                   </p>
                 </div>
-                <button type="button" onClick={closeOrder} className="rounded-md border-2 border-black bg-white p-1.5" aria-label="Tutup detail">
-                  <X size={16} />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setChatTarget({
+                        orderId: order.id,
+                        title: `Chat dengan ${order.customer?.name ?? "customer"}`,
+                      })
+                    }
+                    className={buttonNeutral}
+                  >
+                    <MessageCircle size={15} />
+                    Chat customer
+                  </button>
+                  <button type="button" onClick={closeOrder} className="rounded-md border-2 border-black bg-white p-1.5" aria-label="Tutup detail">
+                    <X size={16} />
+                  </button>
+                </div>
               </div>
 
               <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_18rem]">
@@ -892,7 +869,7 @@ export function DriverApp() {
                         value={proofNote}
                         onChange={(event) => setProofNote(event.target.value)}
                         rows={4}
-                        className="rounded-md border-2 border-black bg-white p-2 text-sm font-medium outline-none"
+                        className="rounded-md border-2 border-black bg-white p-2 text-sm font-medium text-black outline-none placeholder:text-gray-500"
                         placeholder="Contoh: Diterima langsung oleh customer"
                       />
                     </label>
@@ -944,7 +921,7 @@ export function DriverApp() {
                       onChange={(event) => setActionReason(event.target.value)}
                       rows={3}
                       maxLength={500}
-                      className="rounded-md border-2 border-black bg-white p-3 text-sm font-medium outline-none"
+                      className="rounded-md border-2 border-black bg-white p-3 text-sm font-medium text-black outline-none placeholder:text-gray-500"
                       placeholder={
                         reasonAction === "reject"
                           ? "Contoh: rute tidak sesuai"
@@ -1038,7 +1015,20 @@ export function DriverApp() {
           <WalletIcon size={17} />
           Tips: dana order masuk ke dompet setelah customer menekan pesanan selesai.
         </p>
+        <Link href="/driver/wallet" className={`${buttonNeutral} mt-3`}>
+          Buka dompet driver
+        </Link>
       </section>
+
+      {chatTarget ? (
+        <ChatModal
+          open
+          onClose={() => setChatTarget(null)}
+          title={chatTarget.title}
+          conversationId={chatTarget.conversationId}
+          start={chatTarget.orderId ? { orderId: chatTarget.orderId } : undefined}
+        />
+      ) : null}
     </div>
   );
 }

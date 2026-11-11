@@ -211,3 +211,38 @@ export type CursorPage<T> = {
   nextCursor: string | null;
   serverTime?: string;
 };
+
+export type ChatMessage = {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  body: string;
+  createdAt: string;
+  sender: { id: string; name: string };
+};
+
+export type ConversationSummary = {
+  id: string;
+  customerId: string;
+  driverId: string;
+  tripId: string | null;
+  orderId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  customer: { id: string; name: string };
+  driver: { id: string; user: { id: string; name: string } };
+  trip: {
+    id: string;
+    serviceType: ServiceType;
+    originCity: string;
+    destCity: string;
+    departureAt: string | null;
+  } | null;
+  order: { id: string; status: OrderStatus } | null;
+  lastMessage: {
+    id: string;
+    senderId: string;
+    body: string;
+    createdAt: string;
+  } | null;
+};

@@ -19,6 +19,7 @@ Dokumen ini adalah sumber kebenaran untuk database, arsitektur folder, kontrak A
 | 6 | Upload dua langkah: `POST /api/uploads` mengembalikan URL, lalu URL dikirim di body JSON endpoint order | Validasi file terpusat, body order tetap JSON |
 | 7 | Data wilayah Indonesia dan koordinat berupa file JSON statis hasil build script | Tanpa ketergantungan API pihak ketiga saat runtime |
 | 8 | Satu sumber state order di server, diakses client lewat SWR/TanStack Query. Modal tidak menyimpan salinan status order | Menghilangkan redundansi state antar modal |
+| 9 | Chat disimpan di tabel `Conversation` dan `Message`, terikat pada trip atau order. Nomor WhatsApp tetap tidak ada di daftar trip dan hanya diambil lewat endpoint kontak saat tombol ditekan | Customer bisa berdiskusi di dalam web tanpa membocorkan nomor secara massal |
 
 Nama status mengikuti dokumen ini (bukan nama lama `PENDING_PRICE`, `WAITING_PAYMENT`, dst.). Lihat bagian 3.
 
@@ -70,8 +71,13 @@ tipskuy/
 |   |   |-- login/page.tsx
 |   |   `-- register/page.tsx
 |   |-- (main)/
-|   |   |-- caridriver/page.tsx
-|   |   `-- driver/page.tsx
+|   |   |-- caridriver/
+|   |   |   |-- page.tsx                        (cari trip dan buat order)
+|   |   |   |-- pesanan/page.tsx                (daftar dan detail pesanan customer)
+|   |   |   `-- postingan/page.tsx              (buat postingan terbuka)
+|   |   `-- driver/
+|   |       |-- page.tsx
+|   |       `-- wallet/page.tsx
 |   `-- api/
 |       |-- auth/
 |       |   |-- [...nextauth]/route.ts
@@ -101,6 +107,9 @@ tipskuy/
 |       |   |-- route.ts
 |       |   |-- read-all/route.ts
 |       |   `-- [id]/read/route.ts
+|       |-- conversations/
+|       |   |-- route.ts                        (GET list, POST start)
+|       |   `-- [id]/messages/route.ts          (GET messages, POST message)
 |       |-- wallet/
 |       |   |-- route.ts
 |       |   `-- withdraw/route.ts
@@ -115,9 +124,8 @@ tipskuy/
 |   |   `-- MapViewInner.tsx                    (react-leaflet, hanya client)
 |   |-- region/
 |   |   `-- RegionSelect.tsx                    (Provinsi -> Kota, memanggil onCityChange)
-|   |-- caridriver/                             (SearchForm, DriverList, DriverCard, OpenRequestForm)
-|   |-- driver/                                 (TripForm, ActiveTripList, WalletCard, DeliveryProofForm)
-|   |-- orders/
+|   |-- caridriver/                             (CariDriverApp, PesananSayaApp, DriverCard, OpenRequestForm, CustomerOrderPanel)
+|   |-- driver/                                 (DriverApp, TripForm, ActiveTripList, WalletApp, DeliveryProofForm)|   |-- orders/
 |   |   |-- OrderFlowProvider.tsx               (state controller tunggal)
 |   |   |-- OrderFlowModal.tsx                  (memilih isi modal berdasarkan status)
 |   |   |-- PopUpTitip.tsx
@@ -127,6 +135,8 @@ tipskuy/
 |   |   |-- PopUpCancel.tsx
 |   |   |-- DriverPricingModal.tsx
 |   |   `-- CountdownTimer.tsx
+|   |-- chat/
+|   |   `-- ChatModal.tsx                       (obrolan trip atau order, polling 4 detik)
 |   `-- notifications/                          (NotificationBell, NotificationDrawer)
 |-- hooks/
 |   |-- useOrder.ts
@@ -142,6 +152,7 @@ tipskuy/
 |   |-- time.ts                                 (clock injectable, konstanta 5 menit)
 |   |-- notifications.ts                        (notify())
 |   |-- jobs.ts                                 (publish QStash, verifikasi signature)
+|   |-- chat.ts                                 (startConversation, listMessages, sendMessage)
 |   |-- storage/
 |   |   |-- index.ts                            (interface StorageProvider)
 |   |   |-- validate-image.ts                   (magic bytes, ukuran, EXIF strip)
@@ -156,7 +167,7 @@ tipskuy/
 |       `-- service.ts                          (createOrder, setPrice, payOrder, ... )
 |-- types/
 |   |-- api.ts                                  (tipe respons)
-|   `-- schemas/                                (Zod: auth.ts, trip.ts, order.ts, upload.ts)
+|   `-- schemas/                                (Zod: auth.ts, trip.ts, order.ts, upload.ts, chat.ts)
 |-- tests/
 |   |-- unit/
 |   |-- integration/
@@ -321,6 +332,8 @@ model User {
   openRequests   OpenRequest[]
   notifications  Notification[]
   wallet         Wallet?
+  conversations  Conversation[]  @relation("CustomerConversations")
+  messages       Message[]
 
   @@index([role])
 }
@@ -380,6 +393,7 @@ model DriverProfile {
   user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   trips  TripListing[]
   orders Order[]       @relation("DriverOrders")
+  conversations Conversation[]
 }
 
 model TripListing {
@@ -412,6 +426,7 @@ model TripListing {
   @@index([originCityCode, destCityCode, isActive])
   @@index([driverId, isActive])
   @@index([serviceType, isActive])
+  conversations Conversation[]
 }
 
 model OpenRequest {
@@ -433,6 +448,43 @@ model OpenRequest {
 
   @@index([originCityCode, destCityCode, status])
   @@index([customerId])
+}
+
+// ---------- Chat ----------
+
+model Conversation {
+  id         String   @id @default(cuid())
+  customerId String
+  driverId   String
+  tripId     String?
+  orderId    String?  @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  customer User          @relation("CustomerConversations", fields: [customerId], references: [id], onDelete: Restrict)
+  driver   DriverProfile @relation(fields: [driverId], references: [id], onDelete: Restrict)
+  trip     TripListing?  @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  order    Order?        @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  messages Message[]
+
+  @@index([customerId, updatedAt(sort: Desc)])
+  @@index([driverId, updatedAt(sort: Desc)])
+  @@index([tripId])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String
+  body           String   @db.VarChar(1000)
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Restrict)
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
 }
 
 // ---------- Order dan Pembayaran ----------
@@ -474,6 +526,7 @@ model Order {
   deliveryProof  DeliveryProof?
   notifications  Notification[]
   statusLogs     OrderStatusLog[]
+  conversation   Conversation?
 
   @@index([customerId, status, createdAt(sort: Desc)])
   @@index([driverId, status, createdAt(sort: Desc)])
@@ -621,6 +674,8 @@ ALTER TABLE "Order" ADD CONSTRAINT order_total_consistent CHECK (
 );
 CREATE INDEX order_pending_payment_idx ON "Order" ("paymentDeadline")
   WHERE "status" = 'WAITING_CUSTOMER_PAYMENT';
+CREATE UNIQUE INDEX conversation_customer_trip_unique ON "Conversation" ("customerId", "tripId")
+  WHERE "tripId" IS NOT NULL;
 ```
 
 ### 2.3 Catatan Skema
@@ -630,6 +685,8 @@ CREATE INDEX order_pending_payment_idx ON "Order" ("paymentDeadline")
 - `WalletTransaction.escrowId` unik: bahkan jika ada bug di service, rilis dana kedua untuk escrow yang sama ditolak database.
 - `OrderStatusLog` adalah audit trail. Setiap `transition()` menulis satu baris.
 - Wallet driver dibuat saat registrasi driver, dalam transaksi yang sama dengan pembuatan `DriverProfile`.
+- `Conversation` unik per pasangan customer dan trip (partial index) serta unik per `orderId`. Satu trip hanya punya satu ruang obrolan untuk satu customer. Jika order dibuat dari trip yang sudah punya percakapan, order tersebut ditautkan ke percakapan yang sama.
+- `Message.body` dibatasi 1000 karakter di Zod dan `VarChar(1000)` di database. Pesan tidak dapat diubah atau dihapus dari UI.
 
 ---
 
@@ -871,6 +928,8 @@ Trip dalam satu kota diperbolehkan. Contohnya driver membuka jastip dari mall ke
 
 Nomor WhatsApp driver tidak ada di daftar. Nomor hanya dikembalikan oleh `GET /api/trips/[id]/contact` (Auth, CUSTOMER) agar tidak bisa di-scrape massal. Endpoint kontak dibatasi 30 request per menit per user.
 
+Kartu driver di halaman customer menampilkan tombol `WhatsApp` dan `Chat`. Tombol `WhatsApp` baru memanggil endpoint kontak saat ditekan, lalu menampilkan nomor dan tautan `https://wa.me/{nomor}`. Nomor tidak pernah ikut dalam payload `GET /api/trips`. Tombol `Chat` membuka `ChatModal` dan membuat percakapan lewat `POST /api/conversations` dengan `tripId`.
+
 `GET /api/trips/mine` (Auth, DRIVER): daftar trip milik driver, termasuk jumlah order aktif.
 `PATCH /api/trips/[id]` (Auth, DRIVER pemilik): body `{ "isActive": false }`.
 
@@ -1077,6 +1136,53 @@ export async function completeOrder(userId: string, orderId: string, clock = new
 | `POST /orders/[id]/complete` | ya | tidak (`403`) | tidak |
 | `POST /orders/[id]/dispute` | ya | ya | tidak |
 | `GET /orders/[id]` | ya | ya | `404` |
+| `POST /conversations` (`tripId`) | ya | tidak | tidak |
+| `POST /conversations` (`orderId`) | ya | ya | `404` |
+| `GET /conversations` | ya | ya | tidak |
+| `GET /conversations/[id]/messages` | ya | ya | `404` |
+| `POST /conversations/[id]/messages` | ya | ya | `404` |
+
+### 4.11 Chat Customer dan Driver
+
+Chat dipakai agar customer dapat menanyakan barang, ukuran, atau waktu tanpa harus membuka WhatsApp. Percakapan dapat dimulai dari kartu trip sebelum order dibuat, atau dari detail order.
+
+`POST /api/conversations` (Auth)
+
+```json
+// Request dari kartu trip
+{ "tripId": "clx..." }
+// Request dari detail order
+{ "orderId": "ord_1" }
+// 200
+{ "data": { "id": "conv_1", "tripId": "clx...", "orderId": null,
+            "customer": { "id": "usr_c", "name": "Budi" },
+            "driver": { "id": "drv_1", "user": { "id": "usr_d", "name": "Ardi" } },
+            "trip": { "id": "clx...", "originCity": "Kota Semarang", "destCity": "Kota Bandung" },
+            "order": null, "lastMessage": null } }
+```
+
+Aturan:
+- `tripId` hanya boleh dikirim oleh CUSTOMER. Percakapan memakai customer pemanggil dan driver pemilik trip.
+- `orderId` boleh dikirim oleh customer atau driver pemilik order. Percakapan memakai pasangan customer dan driver dari order.
+- Hanya satu dari `tripId` atau `orderId` yang boleh diisi. Body dengan keduanya atau tanpa keduanya ditolak `422`.
+- Jika percakapan untuk pasangan customer dan trip sudah ada, endpoint mengembalikan percakapan yang sama. Jika order terkait belum tertaut, `orderId` diisi.
+- Resource milik pengguna lain mengembalikan `404`.
+
+`GET /api/conversations` (Auth): daftar percakapan milik pemanggil, diurutkan `updatedAt` menurun, maksimum 50 item. Setiap item menyertakan `lastMessage`.
+
+`GET /api/conversations/[id]/messages?limit=100` (Auth, peserta percakapan)
+
+```json
+{ "data": { "items": [
+    { "id": "msg_1", "conversationId": "conv_1", "senderId": "usr_c",
+      "sender": { "id": "usr_c", "name": "Budi" }, "body": "Bisa titip ukuran L?",
+      "createdAt": "2026-11-10T03:00:00.000Z" } ],
+    "serverTime": "2026-11-10T03:00:05.000Z" } }
+```
+
+`POST /api/conversations/[id]/messages` (Auth, peserta percakapan): body `{ "body": "teks 1 sampai 1000 karakter" }`, rate limit 30 pesan per menit per user. Status order final membuat percakapan hanya bisa dibaca dan endpoint mengembalikan `409 CHAT_CLOSED`.
+
+Client memakai `ChatModal` dengan polling 4 detik saat modal terbuka, berhenti saat modal ditutup atau tab tersembunyi. Fokus keyboard masuk ke kolom pesan saat modal dibuka, `Escape` menutup modal, dan `Enter` mengirim pesan (Shift+Enter membuat baris baru).
 
 ---
 
@@ -1310,6 +1416,7 @@ Catatan: bagian ini disusun dari nama komponen yang disebutkan di spesifikasi. S
 | `DriverPricingModal` (baru) | Driver mengisi harga barang dan ongkos | `WAITING_DRIVER_PRICING` (sisi driver) |
 | `PaymentMethode` | Ringkasan harga, countdown, pilihan QRIS/VA | `WAITING_CUSTOMER_PAYMENT` (sisi customer) |
 | `LiveProgress` | Linimasa status dan tombol "Pesanan Selesai" | `PAID_HELD_IN_ESCROW`, `IN_TRANSIT`, `DELIVERED_PENDING_CONFIRMATION` |
+| `ChatModal` (baru) | Obrolan customer dan driver per trip atau order | Kapan saja dari kartu trip atau detail order yang masih aktif |
 | `PopUpSuccess` | Konfirmasi selesai | `COMPLETED` |
 | `PopUpCancel` | Alasan pembatalan | `CANCELLED_EXPIRED`, `REJECTED_BY_*`, `REFUNDED` |
 
@@ -1366,6 +1473,7 @@ Aturan refactor:
 - Semua ikon dari `lucide-react`. Tidak ada emoji dan tidak ada ikon inline buatan sendiri.
 - Ukuran ikon seragam: 16 px untuk teks inline, 20 px untuk tombol, 24 px untuk header modal.
 - Label status memakai teks dan warna fungsional (misal `text-amber-700` dengan titik kecil), bukan badge kapsul dekoratif.
+- Catatan trip dari driver ditampilkan sebagai kotak `rounded-md` dengan label tebal dan teks `text-black`, bukan teks kecil abu-abu. Textarea catatan memakai `text-black` eksplisit agar teks yang diketik selalu terlihat.
 - Tidak ada gradien mencolok atau efek glow. Ikuti palet tema yang sudah ada.
 
 Pemetaan ikon yang disarankan:
@@ -1381,6 +1489,24 @@ Pemetaan ikon yang disarankan:
 | Batal | `XCircle` |
 | Selesai | `CheckCircle2` |
 | WhatsApp (tautan kontak) | `MessageCircle` |
+
+### 7.4 Layout Responsif
+
+1. Lebar acuan minimum 375 px. Tidak boleh ada overflow horizontal. Semua baris tombol memakai `flex-wrap` dan tombol aksi utama melebar penuh pada layar kecil.
+2. Halaman `/caridriver` dan `/driver` memakai satu kolom pada layar kecil. Dua kolom hanya aktif pada `lg`.
+3. Dompet driver berada di halaman terpisah `/driver/wallet`, bukan di dashboard. Dashboard hanya menampilkan tautan menuju dompet. Halaman dompet memakai satu kolom pada layar kecil.
+4. Header halaman memakai ukuran teks `text-2xl` pada layar kecil dan `text-3xl` pada `md`. Kartu memakai padding `p-4` pada layar kecil dan `p-5` atau `p-6` pada `md`.
+5. Footer memakai grid dua kolom pada layar kecil: identitas dan sosial di baris pertama, kontak dan navigasi di baris kedua. Padding vertikal `py-8` pada layar kecil dan `py-12` pada `md`. Ikon sosial memakai `lucide-react` ukuran 20 px pada layar kecil dan 24 px pada `md`.
+6. `ChatModal` memakai lebar penuh dikurangi padding pada layar kecil, tinggi maksimum `85vh`, dan area pesan dapat digulir tanpa menggeser halaman di belakang.
+7. Kartu trip pada halaman customer memakai `flex h-full flex-col` dan grup tombol `mt-auto`, sehingga tombol selalu sejajar di bawah kartu meskipun isi catatan berbeda. Baris keberangkatan selalu tampil; bila `departureAt` kosong, tampilkan `createdAt` sebagai waktu trip dibuka. Kotak catatan selalu tampil dengan tinggi minimum dan teks pengganti "Belum ada catatan dari driver" bila catatan kosong.
+
+### 7.5 Navigasi dan Pemisahan Halaman Customer
+
+1. Menu publik (Home, About, Contact) hanya tampil saat pengguna belum login. Menu ini tidak ditampilkan untuk customer atau driver yang sudah login.
+2. Customer yang sudah login memakai menu `Cari Driver`, `Pesanan Saya`, dan `Postingan Terbuka`. Driver memakai menu `Dashboard`, `Dompet`, dan `Postingan Terbuka`.
+3. Halaman customer dipisah: `/caridriver` untuk mencari trip dan membuat order, `/caridriver/pesanan` untuk daftar dan detail pesanan, `/caridriver/postingan` untuk membuat postingan terbuka.
+4. Setelah order dibuat dari `/caridriver`, client mengarahkan ke `/caridriver/pesanan?order={id}` agar detail order langsung terbuka.
+5. Logo di navbar selalu menuju `/` (tampilan awal) untuk semua peran.
 
 ---
 

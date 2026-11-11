@@ -116,6 +116,8 @@ model User {
   openRequests   OpenRequest[]
   notifications  Notification[]
   wallet         Wallet?
+  conversations  Conversation[]  @relation("CustomerConversations")
+  messages       Message[]
 
   @@index([role])
 }
@@ -174,6 +176,7 @@ model DriverProfile {
   user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   trips  TripListing[]
   orders Order[]       @relation("DriverOrders")
+  conversations Conversation[]
 }
 
 model TripListing {
@@ -206,6 +209,7 @@ model TripListing {
   @@index([originCityCode, destCityCode, isActive])
   @@index([driverId, isActive])
   @@index([serviceType, isActive])
+  conversations Conversation[]
 }
 
 model OpenRequest {
@@ -227,6 +231,43 @@ model OpenRequest {
 
   @@index([originCityCode, destCityCode, status])
   @@index([customerId])
+}
+
+// ---------- Chat ----------
+
+model Conversation {
+  id         String   @id @default(cuid())
+  customerId String
+  driverId   String
+  tripId     String?
+  orderId    String?  @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  customer User          @relation("CustomerConversations", fields: [customerId], references: [id], onDelete: Restrict)
+  driver   DriverProfile @relation(fields: [driverId], references: [id], onDelete: Restrict)
+  trip     TripListing?  @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  order    Order?        @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  messages Message[]
+
+  @@index([customerId, updatedAt(sort: Desc)])
+  @@index([driverId, updatedAt(sort: Desc)])
+  @@index([tripId])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String
+  body           String   @db.VarChar(1000)
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Restrict)
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
 }
 
 // ---------- Order dan Pembayaran ----------
@@ -268,6 +309,7 @@ model Order {
   deliveryProof DeliveryProof?
   notifications Notification[]
   statusLogs    OrderStatusLog[]
+  conversation  Conversation?
 
   @@index([customerId, status, createdAt(sort: Desc)])
   @@index([driverId, status, createdAt(sort: Desc)])

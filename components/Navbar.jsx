@@ -4,8 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
-import { FaBars, FaTimes } from "react-icons/fa";
-import { LogOut } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 import { NotificationBell } from "@/components/app/NotificationBell";
 import { notifyMeChanged } from "@/components/app/useMe";
 import { useMe } from "@/components/app/useMe";
@@ -14,33 +13,38 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { me, loading } = useMe();
 
-  const handleScroll = (e, path) => {
-    if (path.includes("#")) {
-      const id = path.split("#")[1];
-      const element = document.getElementById(id);
-      if (element) {
-        e.preventDefault();
-        element.scrollIntoView({ behavior: "smooth", block: "start" });
-        setIsOpen(false);
-      }
-    } else {
-      setIsOpen(false);
-    }
-  };
-
   const isDriver = me?.role === "DRIVER";
 
-  const menuList = isDriver
+  const menuList = !me
     ? [
-        { name: "Dashboard", path: "/driver" },
-        { name: "Postingan Terbuka", path: "/driver#postingan-terbuka" },
-      ]
-    : [
         { name: "Home", path: "/#main-page" },
         { name: "About", path: "/#about" },
-        { name: "Cari Driver", path: "/caridriver" },
         { name: "Contact", path: "/#contact" },
-      ];
+      ]
+    : isDriver
+      ? [
+          { name: "Dashboard", path: "/driver" },
+          { name: "Dompet", path: "/driver/wallet" },
+          { name: "Postingan Terbuka", path: "/driver#postingan-terbuka" },
+        ]
+      : [
+          { name: "Cari Driver", path: "/caridriver" },
+          { name: "Pesanan Saya", path: "/caridriver/pesanan" },
+          { name: "Postingan Terbuka", path: "/caridriver/postingan" },
+        ];
+
+  const handleScroll = (e, path) => {
+    setIsOpen(false);
+    if (!path.includes("#")) return;
+    const [basePath, id] = path.split("#");
+    if (typeof window === "undefined") return;
+    if (basePath && window.location.pathname !== basePath) return;
+    const element = document.getElementById(id);
+    if (element) {
+      e.preventDefault();
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   async function handleLogout() {
     await signOut({ callbackUrl: "/" });
@@ -51,8 +55,8 @@ export default function Navbar() {
     <header className="fixed left-4 right-4 top-4 z-50 md:left-6 md:right-6">
       <div className="relative z-50 flex items-center justify-between rounded-full border-2 border-black bg-[#FFFFAF] p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:p-3">
         <Link
-          href={isDriver ? "/driver" : "/"}
-          className="flex items-center gap-2 pl-4 text-2xl font-extrabold text-black md:pl-6 md:text-4xl"
+          href="/"
+          className="flex items-center gap-2 pl-2 text-2xl font-extrabold text-black md:pl-4 md:text-4xl"
         >
           <Image
             src="/midlogo.webp"
@@ -65,7 +69,7 @@ export default function Navbar() {
           <span>Tipskuy!</span>
         </Link>
 
-        <div className="hidden gap-6 text-lg font-extrabold lg:flex">
+        <div className="hidden gap-6 text-base font-extrabold lg:flex xl:text-lg">
           {menuList.map((item) => (
             <Link
               href={item.path}
@@ -78,7 +82,7 @@ export default function Navbar() {
           ))}
         </div>
 
-        <div className="flex items-center gap-2 pr-2 md:gap-3 md:pr-0">
+        <div className="flex items-center gap-2 pr-1 md:gap-3 md:pr-0">
           {me ? (
             <>
               <NotificationBell role={me.role} />
@@ -119,8 +123,9 @@ export default function Navbar() {
             onClick={() => setIsOpen(!isOpen)}
             className="flex items-center justify-center rounded-full border-2 border-black bg-white p-2 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-transform active:scale-95 lg:hidden"
             aria-label="Menu"
+            aria-expanded={isOpen}
           >
-            {isOpen ? <FaTimes size={18} /> : <FaBars size={18} />}
+            {isOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
       </div>
@@ -132,8 +137,8 @@ export default function Navbar() {
               <Link
                 href={item.path}
                 key={item.name}
-                onClick={() => setIsOpen(false)}
-                className="border-b-2 border-black px-6 py-4 text-xl font-extrabold text-black transition-colors hover:bg-[#FFFFAF]"
+                onClick={(e) => handleScroll(e, item.path)}
+                className="border-b-2 border-black px-6 py-4 text-lg font-extrabold text-black transition-colors hover:bg-[#FFFFAF]"
               >
                 {item.name}
               </Link>
