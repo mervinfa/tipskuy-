@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { AppError, decodeCursor, encodeCursor } from "@/lib/http";
 import { formatRupiah } from "@/lib/format";
 
-type Tx = Prisma.TransactionClient;
+type Tx = Prisma.TransactionClient | typeof prisma;
 
 export type NotifyInput = {
   userId: string;

@@ -7,7 +7,7 @@ import {
   Prisma,
   WalletTxType,
 } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { prisma, TX_OPTIONS } from "@/lib/prisma";
 import { AppError, decodeCursor, encodeCursor, isPrismaErrorCode } from "@/lib/http";
 import { env } from "@/lib/env";
 import { paymentDeadlineFrom } from "@/lib/time";
@@ -175,7 +175,7 @@ export async function createOrder(userId: string, input: CreateOrderInput) {
     });
     await notifyOrderRequested(tx, trip.driver.userId, created.id);
     return created.id;
-  });
+  }, TX_OPTIONS);
   return fetchOrderDetailOrThrow(orderId);
 }
 
@@ -220,7 +220,7 @@ export async function claimOpenRequest(userId: string, requestId: string, clock:
     });
     await notifyOpenRequestClaimed(tx, request.customerId, created.id);
     return created.id;
-  });
+  }, TX_OPTIONS);
   return fetchOrderDetailOrThrow(orderId);
 }
 
@@ -271,7 +271,7 @@ export async function setPrice(userId: string, orderId: string, input: SetPriceI
       },
     });
     await notifyPriceSet(tx, order.customerId, orderId, totals.totalAmount, paymentDeadline);
-  });
+  }, TX_OPTIONS);
   // Efek eksternal setelah commit; kegagalan publish tidak menggagalkan set-price (lihat lib/jobs.ts).
   await publishExpireOrderJob(orderId);
   return fetchOrderDetailOrThrow(orderId);
@@ -372,7 +372,7 @@ export async function payOrder(userId: string, orderId: string, input: PayOrderI
       amount,
     });
     return { kind: "ok" as const };
-  });
+  }, TX_OPTIONS);
 
   if (outcome.kind === "expired") {
     throw new AppError(410, "PAYMENT_DEADLINE_PASSED", "Waktu pembayaran 5 menit telah habis");
@@ -415,7 +415,7 @@ export async function rejectOrder(userId: string, orderId: string, input: Reject
       orderId,
       reason: input.reason,
     });
-  });
+  }, TX_OPTIONS);
   return fetchOrderDetailOrThrow(orderId);
 }
 
@@ -439,7 +439,7 @@ export async function startOrder(userId: string, orderId: string, clock: Date = 
       data: { startedAt: clock },
     });
     await notifyOrderStarted(tx, order.customerId, orderId);
-  });
+  }, TX_OPTIONS);
   return fetchOrderDetailOrThrow(orderId);
 }
 
@@ -468,7 +468,7 @@ export async function deliverOrder(userId: string, orderId: string, input: Deliv
       data: { orderId, imageUrl: parsed.key, note: input.note, deliveredAt: clock },
     });
     await notifyOrderDelivered(tx, order.customerId, orderId);
-  });
+  }, TX_OPTIONS);
   return fetchOrderDetailOrThrow(orderId);
 }
 
@@ -524,7 +524,7 @@ export async function completeOrder(userId: string, orderId: string, clock: Date
       escrow: { status: EscrowStatus.RELEASED, releasedAt: escrow.releasedAt },
       driverPayout: payout,
     };
-  });
+  }, TX_OPTIONS);
 }
 
 // ---------- Dispute ----------
@@ -554,7 +554,7 @@ export async function disputeOrder(userId: string, orderId: string, input: Dispu
       orderId,
       reason: input.reason,
     });
-  });
+  }, TX_OPTIONS);
   return fetchOrderDetailOrThrow(orderId);
 }
 
@@ -646,7 +646,7 @@ export async function processPaymentWebhook(
     });
     console.error(`Webhook pembayaran tiba setelah deadline untuk order ${order.id}: refund dipicu`);
     return { outcome: "refunded" as const };
-  });
+  }, TX_OPTIONS);
 }
 
 // ---------- Read ----------

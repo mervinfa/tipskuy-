@@ -5,3 +5,8 @@ const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 export const prisma = globalForPrisma.prisma ?? new PrismaClient();
 
 globalForPrisma.prisma = prisma;
+
+export const TX_OPTIONS = {
+  maxWait: 10000,
+  timeout: 15000,
+} as const;

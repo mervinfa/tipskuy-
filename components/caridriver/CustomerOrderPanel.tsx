@@ -50,17 +50,14 @@ export function CustomerOrderPanel({
   onOpenChat: () => void;
 }) {
   const [busy, setBusy] = useState(false);
-  const [method, setMethod] = useState<"QRIS" | "VIRTUAL_ACCOUNT" | "MOCK_TRANSFER">("QRIS");
   const [contact, setContact] = useState<{ driverName: string; whatsappNumber: string } | null>(null);
   const [actionMode, setActionMode] = useState<"reject" | "dispute" | "complete" | null>(null);
   const [actionReason, setActionReason] = useState("");
-  const idemRef = useRef(crypto.randomUUID());
   const countdown = useCountdown(order.paymentDeadline, order.serverTime ?? null, () => {
     void onRefresh();
   });
 
   useEffect(() => {
-    idemRef.current = crypto.randomUUID();
     setContact(null);
     setActionMode(null);
     setActionReason("");
@@ -92,13 +89,16 @@ export function CustomerOrderPanel({
     onError(null);
   }
 
-  async function pay() {
-    await run(() =>
-      apiSend(`/api/orders/${order.id}/pay`, "POST", {
-        method,
-        idempotencyKey: idemRef.current,
-      })
-    );
+  async function triggerPollingRefresh() {
+    await onRefresh();
+    let attempts = 0;
+    const interval = setInterval(async () => {
+      attempts += 1;
+      await onRefresh();
+      if (attempts >= 5) {
+        clearInterval(interval);
+      }
+    }, 2000);
   }
 
   async function payWithMidtrans() {
@@ -112,16 +112,16 @@ export function CustomerOrderPanel({
       if (typeof window !== "undefined" && window.snap) {
         window.snap.pay(data.token, {
           onSuccess: async () => {
-            await onRefresh();
+            await triggerPollingRefresh();
           },
           onPending: async () => {
-            await onRefresh();
+            await triggerPollingRefresh();
           },
           onError: () => {
             onError("Pembayaran Midtrans dibatalkan atau gagal");
           },
           onClose: () => {
-            void onRefresh();
+            void triggerPollingRefresh();
           },
         });
       } else if (data.redirect_url) {
@@ -263,7 +263,7 @@ export function CustomerOrderPanel({
           <div>
             <p className="text-sm font-extrabold text-black">Pembayaran Pesanan</p>
             <p className="mt-1 text-xs text-neutral-600">
-              Selesaikan pembayaran menggunakan gateway Midtrans Sandbox (QRIS, GoPay, ShopeePay, Virtual Account simulasi tanpa uang asli).
+              Selesaikan pembayaran menggunakan gateway Midtrans Sandbox (QRIS, GoPay, ShopeePay, Virtual Account demo).
             </p>
           </div>
 
@@ -278,35 +278,6 @@ export function CustomerOrderPanel({
               Bayar Sekarang (Midtrans Snap)
             </button>
           </div>
-
-          <details className="mt-1 text-xs text-neutral-600">
-            <summary className="cursor-pointer font-bold hover:text-black">
-              Simulasi pembayaran instan (mock internal)
-            </summary>
-            <div className="mt-2 flex flex-wrap items-end gap-2 rounded-md border border-neutral-300 bg-white p-2">
-              <label className="flex flex-col gap-1 font-bold text-black">
-                Metode simulasi
-                <select
-                  value={method}
-                  onChange={(event) => setMethod(event.target.value as typeof method)}
-                  className="h-9 rounded-md border-2 border-black bg-white px-2 text-xs font-medium"
-                >
-                  <option value="QRIS">QRIS</option>
-                  <option value="VIRTUAL_ACCOUNT">Virtual Account</option>
-                  <option value="MOCK_TRANSFER">Transfer mock</option>
-                </select>
-              </label>
-              <button
-                type="button"
-                onClick={() => void pay()}
-                disabled={busy || !canPay}
-                className={buttonNeutral}
-              >
-                {busy ? <Loader2 size={14} className="animate-spin" /> : null}
-                Konfirmasi bayar instan
-              </button>
-            </div>
-          </details>
 
           {!canPay ? (
             <p className="text-xs font-bold text-red-700">Waktu pembayaran habis. Muat ulang status.</p>
