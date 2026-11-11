@@ -38,11 +38,11 @@ export async function POST(req: Request) {
     }
 
     // 2. Tangkap orderId murni dari format `${orderId}-${timestamp}`
-    const pureOrderId = order_id.includes("-") ? order_id.split("-")[0] : order_id;
+    const realOrderId = order_id.split("-")[0];
 
     // 3. Cari data order
     let order = await prisma.order.findUnique({
-      where: { id: pureOrderId },
+      where: { id: realOrderId },
       include: {
         driver: { select: { userId: true } },
       },
@@ -78,11 +78,10 @@ export async function POST(req: Request) {
     const now = new Date();
 
     if (isSuccess) {
-      // Hanya proses bila pesanan belum berstatus lunas
+      // Jalankan prisma.order.update secara langsung tanpa $transaction rumit
       if (order.status !== OrderStatus.PAID_HELD_IN_ESCROW) {
-        // Direct query update tanpa nested interactive transaction panjang
         await prisma.order.update({
-          where: { id: order.id },
+          where: { id: realOrderId },
           data: {
             status: OrderStatus.PAID_HELD_IN_ESCROW,
             paidAt: now,
@@ -90,9 +89,9 @@ export async function POST(req: Request) {
         });
 
         const payment = await prisma.payment.upsert({
-          where: { orderId: order.id },
+          where: { orderId: realOrderId },
           create: {
-            orderId: order.id,
+            orderId: realOrderId,
             method: PaymentMethod.QRIS,
             status: PaymentStatus.PAID,
             amount: order.totalAmount ?? Math.round(Number(gross_amount)),
@@ -110,9 +109,9 @@ export async function POST(req: Request) {
         });
 
         await prisma.escrowTransaction.upsert({
-          where: { orderId: order.id },
+          where: { orderId: realOrderId },
           create: {
-            orderId: order.id,
+            orderId: realOrderId,
             paymentId: payment.id,
             amount: order.totalAmount ?? Math.round(Number(gross_amount)),
             platformFee: order.platformFee ?? 0,
@@ -126,7 +125,7 @@ export async function POST(req: Request) {
 
         await prisma.orderStatusLog.create({
           data: {
-            orderId: order.id,
+            orderId: realOrderId,
             fromStatus: order.status,
             toStatus: OrderStatus.PAID_HELD_IN_ESCROW,
             actorType: ActorType.SYSTEM,
@@ -137,13 +136,13 @@ export async function POST(req: Request) {
         await notifyPaymentReceived(prisma, {
           customerId: order.customerId,
           driverUserId: order.driver.userId,
-          orderId: order.id,
+          orderId: realOrderId,
           amount: order.totalAmount ?? Math.round(Number(gross_amount)),
         });
       }
     } else if (isFailure) {
       await prisma.payment.updateMany({
-        where: { OR: [{ orderId: order.id }, { gatewayRef: order_id }] },
+        where: { OR: [{ orderId: realOrderId }, { gatewayRef: order_id }] },
         data: {
           status: PaymentStatus.FAILED,
           rawPayload: body as Prisma.InputJsonValue,

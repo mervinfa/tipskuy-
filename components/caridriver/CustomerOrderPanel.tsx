@@ -3,7 +3,8 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2, MessageCircle, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { CheckCircle2, Loader2, MessageCircle, X } from "lucide-react";
 import { apiErrorMessage, apiGet, apiSend } from "@/components/app/api";
 import { formatDateTime, isClosedStatus } from "@/components/app/format";
 import { StatusBadge } from "@/components/app/StatusBadge";
@@ -49,6 +50,7 @@ export function CustomerOrderPanel({
   onError: (message: string | null) => void;
   onOpenChat: () => void;
 }) {
+  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [contact, setContact] = useState<{ driverName: string; whatsappNumber: string } | null>(null);
   const [actionMode, setActionMode] = useState<"reject" | "dispute" | "complete" | null>(null);
@@ -91,10 +93,12 @@ export function CustomerOrderPanel({
 
   async function triggerPollingRefresh() {
     await onRefresh();
+    router.refresh();
     let attempts = 0;
     const interval = setInterval(async () => {
       attempts += 1;
       await onRefresh();
+      router.refresh();
       if (attempts >= 5) {
         clearInterval(interval);
       }
@@ -282,6 +286,18 @@ export function CustomerOrderPanel({
           {!canPay ? (
             <p className="text-xs font-bold text-red-700">Waktu pembayaran habis. Muat ulang status.</p>
           ) : null}
+        </div>
+      ) : null}
+
+      {order.status === "PAID_HELD_IN_ESCROW" ? (
+        <div className="mt-4 rounded-lg border-2 border-black bg-emerald-50 p-4">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={18} className="text-emerald-700" />
+            <p className="text-sm font-extrabold text-emerald-950">Pembayaran Berhasil (Lunas)</p>
+          </div>
+          <p className="mt-1 text-xs font-medium text-emerald-800">
+            Pembayaran telah diverifikasi secara otomatis oleh sistem. Dana aman tertahan di rekening bersama Tipskuy dan driver sedang memproses pembelian atau pengiriman pesanan Anda.
+          </p>
         </div>
       ) : null}
 

@@ -106,11 +106,13 @@ export function PesananSayaApp() {
   useEffect(() => {
     if (!orderId) return;
     void loadOrder();
+    // Polling 3000 ms selama pesanan masih menunggu pembayaran agar otomatis tersinkronisasi
+    const intervalTime = order?.status === "WAITING_CUSTOMER_PAYMENT" ? 3000 : 5000;
     const timer = window.setInterval(() => {
       void loadOrder(true);
-    }, 5000);
+    }, intervalTime);
     return () => window.clearInterval(timer);
-  }, [orderId, loadOrder]);
+  }, [orderId, order?.status, loadOrder]);
 
   function openOrder(id: string) {
     setOrderId(id);
