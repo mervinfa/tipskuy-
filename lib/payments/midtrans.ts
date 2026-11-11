@@ -108,3 +108,46 @@ export function verifyMidtransSignature(
   }
 }
 
+export type MidtransStatusResult = {
+  status_code: string;
+  transaction_status: string;
+  fraud_status?: string;
+  gross_amount: string;
+  order_id: string;
+  payment_type?: string;
+};
+
+export async function checkMidtransStatus(
+  midtransOrderId: string
+): Promise<MidtransStatusResult | null> {
+  const { isProduction, serverKey } = getMidtransConfig();
+  if (!serverKey) return null;
+
+  const baseUrl = isProduction
+    ? "https://api.midtrans.com/v2"
+    : "https://api.sandbox.midtrans.com/v2";
+
+  const authHeader = `Basic ${Buffer.from(`${serverKey}:`).toString("base64")}`;
+
+  try {
+    const res = await fetch(`${baseUrl}/${encodeURIComponent(midtransOrderId)}/status`, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: authHeader,
+      },
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const data = (await res.json()) as MidtransStatusResult;
+    return data;
+  } catch (err) {
+    console.error("Gagal memeriksa status ke Midtrans API:", err);
+    return null;
+  }
+}
+

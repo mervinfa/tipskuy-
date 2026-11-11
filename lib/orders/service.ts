@@ -3,6 +3,7 @@ import {
   EscrowStatus,
   OpenRequestStatus,
   OrderStatus,
+  PaymentMethod,
   PaymentStatus,
   Prisma,
   WalletTxType,
@@ -12,6 +13,7 @@ import { AppError, decodeCursor, encodeCursor, isPrismaErrorCode } from "@/lib/h
 import { env } from "@/lib/env";
 import { paymentDeadlineFrom } from "@/lib/time";
 import { paymentGateway } from "@/lib/payments";
+import { checkMidtransStatus } from "@/lib/payments/midtrans";
 import { parseStorageUrl, bucketName } from "@/lib/storage/url";
 import { getStorageProvider } from "@/lib/storage/provider";
 import { publishExpireOrderJob } from "@/lib/jobs";
@@ -649,10 +651,112 @@ export async function processPaymentWebhook(
   }, TX_OPTIONS);
 }
 
+// Sinkronisasi status transaksi dari Midtrans jika webhook belum sampai
+export async function syncMidtransPayment(orderId: string): Promise<boolean> {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      payment: true,
+      driver: { select: { userId: true } },
+    },
+  });
+
+  if (!order || order.status !== OrderStatus.WAITING_CUSTOMER_PAYMENT) {
+    return false;
+  }
+
+  const gatewayRef = order.payment?.gatewayRef;
+  if (!gatewayRef) {
+    return false;
+  }
+
+  const midtransData = await checkMidtransStatus(gatewayRef);
+  if (!midtransData) {
+    return false;
+  }
+
+  const isSuccess =
+    midtransData.transaction_status === "settlement" ||
+    (midtransData.transaction_status === "capture" && midtransData.fraud_status === "accept");
+
+  if (!isSuccess) {
+    return false;
+  }
+
+  const now = new Date();
+
+  await prisma.order.update({
+    where: { id: order.id },
+    data: {
+      status: OrderStatus.PAID_HELD_IN_ESCROW,
+      paidAt: now,
+    },
+  });
+
+  const payment = await prisma.payment.upsert({
+    where: { orderId: order.id },
+    create: {
+      orderId: order.id,
+      method: PaymentMethod.QRIS,
+      status: PaymentStatus.PAID,
+      amount: order.totalAmount ?? Math.round(Number(midtransData.gross_amount)),
+      gatewayRef,
+      idempotencyKey: crypto.randomUUID(),
+      expiresAt: order.paymentDeadline ?? new Date(Date.now() + 5 * 60 * 1000),
+      paidAt: now,
+      rawPayload: midtransData as unknown as Prisma.InputJsonValue,
+    },
+    update: {
+      status: PaymentStatus.PAID,
+      paidAt: now,
+      rawPayload: midtransData as unknown as Prisma.InputJsonValue,
+    },
+  });
+
+  await prisma.escrowTransaction.upsert({
+    where: { orderId: order.id },
+    create: {
+      orderId: order.id,
+      paymentId: payment.id,
+      amount: order.totalAmount ?? Math.round(Number(midtransData.gross_amount)),
+      platformFee: order.platformFee ?? 0,
+      status: EscrowStatus.HELD,
+      heldAt: now,
+    },
+    update: {
+      status: EscrowStatus.HELD,
+    },
+  });
+
+  await prisma.orderStatusLog.create({
+    data: {
+      orderId: order.id,
+      fromStatus: OrderStatus.WAITING_CUSTOMER_PAYMENT,
+      toStatus: OrderStatus.PAID_HELD_IN_ESCROW,
+      actorType: ActorType.SYSTEM,
+      reason: `Midtrans Status Sync: ${midtransData.transaction_status}`,
+    },
+  });
+
+  await notifyPaymentReceived(prisma, {
+    customerId: order.customerId,
+    driverUserId: order.driver.userId,
+    orderId: order.id,
+    amount: order.totalAmount ?? Math.round(Number(midtransData.gross_amount)),
+  });
+
+  return true;
+}
+
 // ---------- Read ----------
 
 export async function getOrderForUser(userId: string, orderId: string) {
   await expireIfNeeded(orderId);
+  try {
+    await syncMidtransPayment(orderId);
+  } catch (err) {
+    console.error("Gagal sinkronisasi status Midtrans:", err);
+  }
   const order = await prisma.order.findFirst({
     where: { id: orderId, OR: [{ customerId: userId }, { driver: { userId } }] },
     include: DETAIL_INCLUDE,

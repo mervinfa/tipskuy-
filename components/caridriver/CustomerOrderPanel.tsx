@@ -92,11 +92,21 @@ export function CustomerOrderPanel({
   }
 
   async function triggerPollingRefresh() {
+    try {
+      await apiSend("/api/payments/verify-status", "POST", { orderId: order.id });
+    } catch {
+      // Abaikan jika network sesaat
+    }
     await onRefresh();
     router.refresh();
     let attempts = 0;
     const interval = setInterval(async () => {
       attempts += 1;
+      try {
+        await apiSend("/api/payments/verify-status", "POST", { orderId: order.id });
+      } catch {
+        // Abaikan
+      }
       await onRefresh();
       router.refresh();
       if (attempts >= 5) {
