@@ -1,5 +1,4 @@
 import React from 'react';
-import Image from 'next/image';
 const InputL = () => {
 
   return (
@@ -54,7 +53,7 @@ const InputL = () => {
             </div>
 
             <p className="text-center text-sm font-medium mt-4">
-              Don't have an account? <a href="/auth/register" className="text-[#ff9248] font-bold hover:underline">Register.</a>
+              Don&apos;t have an account? <a href="/auth/register" className="text-[#ff9248] font-bold hover:underline">Register.</a>
             </p>
           </form>
         </div>

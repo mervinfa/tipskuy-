@@ -1,5 +1,5 @@
 import React from 'react';
-import InputR from '@/components/auth/InputR';
+import { RegisterForm } from '@/components/auth/RegisterForm';
 
 const register = () => {
   return (
@@ -16,7 +16,7 @@ const register = () => {
             <div className="absolute -bottom-3 -right-1 w-10 h-10 bg-[#e5e7eb] border-[3px] border-black rounded-full shadow-[2px_2px_0px_black]"></div>
           </div>
         </div>
-        <InputR />
+        <RegisterForm />
       </div>
     </div>
   );

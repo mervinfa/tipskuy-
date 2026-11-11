@@ -1,0 +1,398 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------- Enum ----------
+
+enum Role {
+  CUSTOMER
+  DRIVER
+}
+
+enum ServiceType {
+  JASTIP // Jasa Titip Barang
+  ANTAR_JEMPUT // Antar Jemput Barang
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum OrderStatus {
+  DRAFT
+  WAITING_DRIVER_PRICING
+  WAITING_CUSTOMER_PAYMENT
+  PAID_HELD_IN_ESCROW
+  IN_TRANSIT
+  DELIVERED_PENDING_CONFIRMATION
+  COMPLETED
+  CANCELLED_EXPIRED
+  REJECTED_BY_CUSTOMER
+  REJECTED_BY_DRIVER
+  DISPUTED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  QRIS
+  VIRTUAL_ACCOUNT
+  MOCK_TRANSFER
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+  REFUNDED
+}
+
+enum EscrowStatus {
+  HELD
+  RELEASED
+  REFUNDED
+}
+
+enum NotificationType {
+  ORDER_REQUESTED
+  PRICE_SET
+  PAYMENT_RECEIVED
+  ORDER_EXPIRED
+  ORDER_REJECTED
+  ORDER_STARTED
+  ORDER_DELIVERED
+  ORDER_COMPLETED
+  FUNDS_RELEASED
+  ORDER_DISPUTED
+  OPEN_REQUEST_CLAIMED
+}
+
+enum WalletTxType {
+  ESCROW_RELEASE
+  WITHDRAWAL
+  ADJUSTMENT
+}
+
+enum OpenRequestStatus {
+  OPEN
+  CLAIMED
+  CLOSED
+}
+
+enum ActorType {
+  CUSTOMER
+  DRIVER
+  SYSTEM
+  ADMIN
+}
+
+// ---------- Auth ----------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified DateTime?
+  passwordHash  String
+  image         String?
+  phone         String?
+  role          Role
+  deletedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts       Account[]
+  sessions       Session[]
+  driverProfile DriverProfile?
+  customerOrders Order[]         @relation("CustomerOrders")
+  openRequests   OpenRequest[]
+  notifications  Notification[]
+  wallet         Wallet?
+
+  @@index([role])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ---------- Driver dan Trip ----------
+
+model DriverProfile {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  vehicleType        String
+  vehiclePlate       String?
+  whatsappNumber     String // format E.164 tanpa tanda plus, contoh 6281234567890
+  verificationStatus VerificationStatus @default(PENDING)
+  verifiedAt         DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trips  TripListing[]
+  orders Order[]       @relation("DriverOrders")
+}
+
+model TripListing {
+  id          String      @id @default(cuid())
+  driverId    String
+  serviceType ServiceType
+
+  originProvince   String
+  originCityCode   String
+  originCity       String
+  originLat        Float
+  originLng        Float
+
+  destProvince     String
+  destCityCode     String
+  destCity         String
+  destLat          Float
+  destLng          Float
+
+  baseFee      Int // tarif minimum jasa, Rupiah
+  departureAt  DateTime?
+  notes        String?
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  driver DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@index([originCityCode, destCityCode, isActive])
+  @@index([driverId, isActive])
+  @@index([serviceType, isActive])
+}
+
+model OpenRequest {
+  id             String            @id @default(cuid())
+  customerId     String
+  serviceType    ServiceType
+  originCityCode String
+  originCity     String
+  destCityCode   String
+  destCity       String
+  description    String
+  imageUrl       String?
+  status         OpenRequestStatus @default(OPEN)
+  expiresAt      DateTime
+  createdAt      DateTime          @default(now())
+
+  customer User    @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  order    Order?
+
+  @@index([originCityCode, destCityCode, status])
+  @@index([customerId])
+}
+
+// ---------- Order dan Pembayaran ----------
+
+model Order {
+  id           String      @id @default(cuid())
+  customerId   String
+  driverId     String
+  tripId       String?
+  openRequestId String?     @unique
+  status       OrderStatus @default(WAITING_DRIVER_PRICING)
+
+  customerNote String?
+  itemSubtotal Int? // jumlah harga final seluruh barang
+  serviceFee   Int? // ongkos jasa/ongkir yang disepakati
+  platformFee  Int? // fee platform, dibebankan ke customer
+  totalAmount  Int? // itemSubtotal + serviceFee + platformFee
+
+  pricedAt        DateTime?
+  paymentDeadline DateTime? // pricedAt + 5 menit
+  paidAt          DateTime?
+  startedAt       DateTime?
+  deliveredAt     DateTime?
+  completedAt     DateTime?
+  closedAt        DateTime? // waktu masuk status final non-sukses
+  closeReason     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  customer    User           @relation("CustomerOrders", fields: [customerId], references: [id], onDelete: Restrict)
+  driver      DriverProfile  @relation("DriverOrders", fields: [driverId], references: [id], onDelete: Restrict)
+  trip        TripListing?   @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  openRequest OpenRequest?    @relation(fields: [openRequestId], references: [id], onDelete: SetNull)
+
+  items         OrderItem[]
+  payment       Payment?
+  escrow        EscrowTransaction?
+  deliveryProof DeliveryProof?
+  notifications Notification[]
+  statusLogs    OrderStatusLog[]
+
+  @@index([customerId, status, createdAt(sort: Desc)])
+  @@index([driverId, status, createdAt(sort: Desc)])
+  @@index([status, paymentDeadline]) // dipakai scan order hangus
+  @@index([tripId])
+}
+
+model OrderItem {
+  id             String  @id @default(cuid())
+  orderId        String
+  name           String
+  description    String?
+  imageUrl       String
+  quantity       Int     @default(1)
+  estimatedPrice Int? // perkiraan dari customer, opsional
+  finalPrice     Int? // total harga final baris ini, diisi driver
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  orderId        String        @unique
+  method         PaymentMethod
+  status         PaymentStatus @default(PENDING)
+  amount         Int
+  gatewayRef     String?       @unique
+  idempotencyKey String        @unique
+  expiresAt      DateTime
+  paidAt         DateTime?
+  rawPayload     Json?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  order  Order              @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  escrow EscrowTransaction?
+}
+
+model EscrowTransaction {
+  id          String       @id @default(cuid())
+  orderId     String       @unique
+  paymentId   String       @unique
+  amount      Int // dana yang ditahan (totalAmount)
+  platformFee Int
+  status      EscrowStatus @default(HELD)
+  heldAt      DateTime     @default(now())
+  releasedAt  DateTime?
+  refundedAt  DateTime?
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+
+  @@index([status])
+}
+
+model DeliveryProof {
+  id          String   @id @default(cuid())
+  orderId     String   @unique
+  imageUrl    String
+  note        String?
+  deliveredAt DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
+}
+
+model OrderStatusLog {
+  id         String       @id @default(cuid())
+  orderId    String
+  fromStatus OrderStatus?
+  toStatus   OrderStatus
+  actorType  ActorType
+  actorId    String?
+  reason     String?
+  createdAt  DateTime     @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+}
+
+// ---------- Notifikasi ----------
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  orderId   String?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([userId, readAt, createdAt(sort: Desc)])
+}
+
+// ---------- Dompet ----------
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  balance   Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  transactions WalletTransaction[]
+}
+
+model WalletTransaction {
+  id           String       @id @default(cuid())
+  walletId     String
+  type         WalletTxType
+  amount       Int // positif untuk masuk, negatif untuk keluar
+  balanceAfter Int
+  orderId      String?
+  escrowId     String?      @unique // mencegah rilis ganda di level database
+  note         String?
+  createdAt    DateTime     @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Restrict)
+
+  @@index([walletId, createdAt(sort: Desc)])
+}

@@ -1,5 +1,5 @@
 import React from 'react';
-import InputL from '@/components/auth/InputL';
+import { LoginForm } from '@/components/auth/LoginForm';
 
 const Login = () => {
   return (
@@ -18,7 +18,7 @@ const Login = () => {
           </div>
         </div>
         
-      <InputL />
+      <LoginForm />
 
       </div>
     </div>

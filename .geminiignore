@@ -1,0 +1,43 @@
+# Dependencies & Package Managers
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Next.js Build Outputs & Cache
+.next/
+out/
+build/
+dist/
+.cache/
+
+# Environment Variables & Secrets (Sangat Penting)
+.env
+.env*.local
+.env.production
+.env.development
+
+# Media & Static Binary Assets (Paling boros token)
+public/images/
+public/**/*.png
+public/**/*.jpg
+public/**/*.jpeg
+public/**/*.svg
+public/**/*.webp
+public/**/*.ico
+*.zip
+*.tar.gz
+
+# Git & Logs
+.git/
+.github/
+*.log
+npm-debug.log*
+
+# Prisma SQLite local files (jika ada)
+prisma/*.db
+prisma/*.db-journal
+
+# OS temporary files
+.DS_Store
+Thumbs.db
