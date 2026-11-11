@@ -1,6 +1,5 @@
 import React from "react";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { DriverApp } from "@/components/driver/DriverApp";
 
 const DriverPage = () => {
@@ -10,7 +9,6 @@ const DriverPage = () => {
       <main className="mx-auto w-full max-w-7xl flex-grow px-4 pb-12 pt-28 md:px-6 md:pt-32">
         <DriverApp />
       </main>
-      <Footer />
     </div>
   );
 };
