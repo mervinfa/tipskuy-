@@ -1,12 +1,13 @@
-import { prisma } from "@/lib/prisma";
+import { prisma, TX_OPTIONS } from "@/lib/prisma";
 import { AppError } from "@/lib/http";
 import { transition } from "./state-machine";
 import { notifyExpired } from "@/lib/notifications";
+import type { Prisma } from "@prisma/client";
 
 // Idempoten: aman dipanggil berulang. Bila status sudah berubah atau belum waktunya,
 // transisi updateMany menghasilkan count 0 dan fungsi mengembalikan false.
 export async function expireOrder(orderId: string, clock: Date = new Date()): Promise<boolean> {
-  return prisma.$transaction(async (tx) => {
+  const performExpire = async (tx: Prisma.TransactionClient): Promise<boolean> => {
     try {
       await transition(tx, {
         orderId,
@@ -33,7 +34,20 @@ export async function expireOrder(orderId: string, clock: Date = new Date()): Pr
       });
     }
     return true;
-  });
+  };
+
+  try {
+    return await prisma.$transaction(performExpire, TX_OPTIONS);
+  } catch (err: any) {
+    if (
+      err?.code === "P2028" ||
+      (typeof err?.message === "string" && err.message.includes("Transaction API error"))
+    ) {
+      console.warn("Prisma P2028 in expireOrder, falling back to direct execution");
+      return await performExpire(prisma);
+    }
+    throw err;
+  }
 }
 
 export async function expireIfNeeded(orderId: string): Promise<boolean> {

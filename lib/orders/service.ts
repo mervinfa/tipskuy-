@@ -136,10 +136,30 @@ async function fetchOrderDetailOrThrow(orderId: string) {
   return serializeOrder(order, signedProofUrl);
 }
 
+// Helper untuk mengeksekusi operasi transaksi dengan fallback aman ketika
+// connection pooler PgBouncer / Supavisor di Vercel kehabisan pool connection (Error P2028).
+async function runWithTransactionFallback<T>(
+  action: (tx: Prisma.TransactionClient) => Promise<T>,
+  options = TX_OPTIONS
+): Promise<T> {
+  try {
+    return await prisma.$transaction(action, options);
+  } catch (err: any) {
+    if (
+      err?.code === "P2028" ||
+      (typeof err?.message === "string" && err.message.includes("Transaction API error"))
+    ) {
+      console.warn("Prisma P2028 transaction timeout hit, falling back to direct client execution");
+      return await action(prisma);
+    }
+    throw err;
+  }
+}
+
 // ---------- Create ----------
 
 export async function createOrder(userId: string, input: CreateOrderInput) {
-  const orderId = await prisma.$transaction(async (tx) => {
+  const orderId = await runWithTransactionFallback(async (tx) => {
     const trip = await tx.tripListing.findFirst({
       where: { id: input.tripId, isActive: true },
       include: { driver: { select: { userId: true } } },
@@ -184,7 +204,7 @@ export async function createOrder(userId: string, input: CreateOrderInput) {
 // Order dari postingan terbuka lahir langsung di WAITING_DRIVER_PRICING,
 // bukan dari DRAFT, sehingga log baris pertama dicatat dengan fromStatus null.
 export async function claimOpenRequest(userId: string, requestId: string, clock: Date = new Date()) {
-  const orderId = await prisma.$transaction(async (tx) => {
+  const orderId = await runWithTransactionFallback(async (tx) => {
     const request = await tx.openRequest.findUnique({
       where: { id: requestId },
       select: { customerId: true },
@@ -231,33 +251,34 @@ export async function claimOpenRequest(userId: string, requestId: string, clock:
 export async function setPrice(userId: string, orderId: string, input: SetPriceInput, clock: Date = new Date()) {
   const pricedAt = clock;
   const paymentDeadline = paymentDeadlineFrom(pricedAt);
-  await prisma.$transaction(async (tx) => {
-    const order = await tx.order.findFirst({
-      where: { id: orderId, driver: { userId } },
-      include: { items: { select: { id: true } }, trip: { select: { baseFee: true } } },
-    });
-    if (!order) {
-      throw new AppError(404, "NOT_FOUND", "Order tidak ditemukan");
+
+  // Ambil data order dan validasi sebelum membuka transaksi untuk menghemat koneksi pool
+  const order = await prisma.order.findFirst({
+    where: { id: orderId, driver: { userId } },
+    include: { items: { select: { id: true } }, trip: { select: { baseFee: true } } },
+  });
+  if (!order) {
+    throw new AppError(404, "NOT_FOUND", "Order tidak ditemukan");
+  }
+  assertTransition(order.status, OrderStatus.WAITING_CUSTOMER_PAYMENT, ActorType.DRIVER);
+  const orderItemIds = new Set(order.items.map((item) => item.id));
+  const inputIds = new Set(input.items.map((item) => item.id));
+  if (orderItemIds.size !== inputIds.size || [...orderItemIds].some((id) => !inputIds.has(id))) {
+    throw new AppError(422, "VALIDATION_ERROR", "Daftar item harga tidak sesuai dengan item order");
+  }
+  if (order.trip && input.serviceFee < order.trip.baseFee) {
+    throw new AppError(422, "FEE_BELOW_BASE", "Ongkos jasa tidak boleh di bawah tarif minimum trip");
+  }
+  const totals = calcTotals({
+    itemPrices: input.items.map((item) => item.finalPrice),
+    serviceFee: input.serviceFee,
+    feeBps: env.PLATFORM_FEE_BPS,
+  });
+
+  await runWithTransactionFallback(async (tx) => {
+    for (const item of input.items) {
+      await tx.orderItem.update({ where: { id: item.id }, data: { finalPrice: item.finalPrice } });
     }
-    assertTransition(order.status, OrderStatus.WAITING_CUSTOMER_PAYMENT, ActorType.DRIVER);
-    const orderItemIds = new Set(order.items.map((item) => item.id));
-    const inputIds = new Set(input.items.map((item) => item.id));
-    if (orderItemIds.size !== inputIds.size || [...orderItemIds].some((id) => !inputIds.has(id))) {
-      throw new AppError(422, "VALIDATION_ERROR", "Daftar item harga tidak sesuai dengan item order");
-    }
-    if (order.trip && input.serviceFee < order.trip.baseFee) {
-      throw new AppError(422, "FEE_BELOW_BASE", "Ongkos jasa tidak boleh di bawah tarif minimum trip");
-    }
-    const totals = calcTotals({
-      itemPrices: input.items.map((item) => item.finalPrice),
-      serviceFee: input.serviceFee,
-      feeBps: env.PLATFORM_FEE_BPS,
-    });
-    await Promise.all(
-      input.items.map((item) =>
-        tx.orderItem.update({ where: { id: item.id }, data: { finalPrice: item.finalPrice } })
-      )
-    );
     await transition(tx, {
       orderId,
       from: OrderStatus.WAITING_DRIVER_PRICING,
@@ -282,7 +303,7 @@ export async function setPrice(userId: string, orderId: string, input: SetPriceI
 // ---------- Pay ----------
 
 export async function payOrder(userId: string, orderId: string, input: PayOrderInput, clock: Date = new Date()) {
-  const outcome = await prisma.$transaction(async (tx) => {
+  const outcome = await runWithTransactionFallback(async (tx) => {
     const order = await tx.order.findFirst({
       where: { id: orderId, customerId: userId },
       include: { driver: { select: { userId: true } } },
@@ -391,7 +412,7 @@ export async function payOrder(userId: string, orderId: string, input: PayOrderI
 // ---------- Reject ----------
 
 export async function rejectOrder(userId: string, orderId: string, input: RejectOrderInput, clock: Date = new Date()) {
-  await prisma.$transaction(async (tx) => {
+  await runWithTransactionFallback(async (tx) => {
     const order = await tx.order.findFirst({
       where: { id: orderId, OR: [{ customerId: userId }, { driver: { userId } }] },
       include: { driver: { select: { userId: true } } },
@@ -424,7 +445,7 @@ export async function rejectOrder(userId: string, orderId: string, input: Reject
 // ---------- Start ----------
 
 export async function startOrder(userId: string, orderId: string, clock: Date = new Date()) {
-  await prisma.$transaction(async (tx) => {
+  await runWithTransactionFallback(async (tx) => {
     const order = await tx.order.findFirst({
       where: { id: orderId, driver: { userId } },
       select: { customerId: true, status: true },
@@ -448,7 +469,7 @@ export async function startOrder(userId: string, orderId: string, clock: Date = 
 // ---------- Deliver ----------
 
 export async function deliverOrder(userId: string, orderId: string, input: DeliverOrderInput, clock: Date = new Date()) {
-  await prisma.$transaction(async (tx) => {
+  await runWithTransactionFallback(async (tx) => {
     const order = await tx.order.findFirst({
       where: { id: orderId, driver: { userId } },
       select: { customerId: true, status: true },
@@ -477,7 +498,7 @@ export async function deliverOrder(userId: string, orderId: string, input: Deliv
 // ---------- Complete ----------
 
 export async function completeOrder(userId: string, orderId: string, clock: Date = new Date()) {
-  return prisma.$transaction(async (tx) => {
+  return runWithTransactionFallback(async (tx) => {
     const order = await tx.order.findFirst({
       where: { id: orderId, customerId: userId },
       include: { driver: { select: { userId: true } } },
@@ -532,7 +553,7 @@ export async function completeOrder(userId: string, orderId: string, clock: Date
 // ---------- Dispute ----------
 
 export async function disputeOrder(userId: string, orderId: string, input: DisputeOrderInput) {
-  await prisma.$transaction(async (tx) => {
+  await runWithTransactionFallback(async (tx) => {
     const order = await tx.order.findFirst({
       where: { id: orderId, OR: [{ customerId: userId }, { driver: { userId } }] },
       include: { driver: { select: { userId: true } } },
@@ -569,7 +590,7 @@ export async function processPaymentWebhook(
   payload: { gatewayRef: string; status: "PAID" | "FAILED" },
   clock: Date = new Date()
 ) {
-  return prisma.$transaction(async (tx) => {
+  return runWithTransactionFallback(async (tx) => {
     const payment = await tx.payment.findUnique({
       where: { gatewayRef: payload.gatewayRef },
       include: {
