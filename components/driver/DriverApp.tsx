@@ -295,10 +295,11 @@ export function DriverApp() {
   async function submitPrice() {
     if (!order) return;
     const items = order.items.map((item) => {
-      const value = Number(priceDraft[item.id]);
+      const raw = priceDraft[item.id];
+      const value = raw !== undefined && String(raw).trim() !== "" ? Number(raw) : (item.estimatedPrice ?? 0);
       return { id: item.id, finalPrice: value };
     });
-    const fee = Number(serviceFee);
+    const fee = serviceFee !== undefined && String(serviceFee).trim() !== "" ? Number(serviceFee) : (order.trip?.baseFee ?? 0);
     if (
       items.some((item) => !Number.isInteger(item.finalPrice) || item.finalPrice < 0) ||
       !Number.isInteger(fee) ||

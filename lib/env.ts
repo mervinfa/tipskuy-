@@ -17,7 +17,10 @@ const envSchema = z.object({
   APP_URL: z.string().url().default("http://localhost:3000"),
   PLATFORM_FEE_BPS: z.coerce.number().int().min(0).default(500),
   PAYMENT_WINDOW_SECONDS: z.coerce.number().int().min(1).default(300),
-  PAYMENT_PROVIDER: z.enum(["mock"]).default("mock"),
+  PAYMENT_PROVIDER: z.enum(["mock", "midtrans"]).default("mock"),
+  MIDTRANS_SERVER_KEY: z.string().optional(),
+  NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: z.string().optional(),
+  MIDTRANS_IS_PRODUCTION: z.stringbool().default(false),
   VERIFICATION_REQUIRED: z.stringbool().default(false),
 });
 
@@ -53,4 +56,17 @@ export function requireSupabaseConfig() {
     bucketItems: env.SUPABASE_BUCKET_ITEMS,
     bucketProofs: env.SUPABASE_BUCKET_PROOFS,
   };
+}
+
+export function getMidtransConfig() {
+  const isProduction = env.MIDTRANS_IS_PRODUCTION;
+  const serverKey = env.MIDTRANS_SERVER_KEY || "";
+  const clientKey = env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || "";
+  const snapUrl = isProduction
+    ? "https://app.midtrans.com/snap/v1/transactions"
+    : "https://app.sandbox.midtrans.com/snap/v1/transactions";
+  const snapJsUrl = isProduction
+    ? "https://app.midtrans.com/snap/snap.js"
+    : "https://app.sandbox.midtrans.com/snap/snap.js";
+  return { isProduction, serverKey, clientKey, snapUrl, snapJsUrl };
 }

@@ -10,12 +10,16 @@ export async function publishExpireOrderJob(orderId: string): Promise<void> {
   }
   try {
     const client = new Client({ token: env.QSTASH_TOKEN });
-    await client.publishJSON({
+    const publishPromise = client.publishJSON({
       url: `${env.APP_URL}/api/jobs/expire-order`,
       body: { orderId },
       delay: env.PAYMENT_WINDOW_SECONDS,
       retries: 3,
     });
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("QSTASH_PUBLISH_TIMEOUT")), 3000)
+    );
+    await Promise.race([publishPromise, timeoutPromise]);
   } catch (e) {
     console.error("Gagal publish job expire-order ke QStash", e);
   }

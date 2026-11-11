@@ -11,6 +11,22 @@ import type { OrderDetail } from "@/components/app/types";
 import { useCountdown } from "@/hooks/useCountdown";
 import { formatRupiah } from "@/lib/format";
 
+declare global {
+  interface Window {
+    snap?: {
+      pay: (
+        token: string,
+        options: {
+          onSuccess?: (result: unknown) => void;
+          onPending?: (result: unknown) => void;
+          onError?: (result: unknown) => void;
+          onClose?: () => void;
+        }
+      ) => void;
+    };
+  }
+}
+
 const cardClass =
   "rounded-xl border-[3px] border-black bg-white p-4 shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] md:p-5";
 const buttonPrimary =
@@ -83,6 +99,37 @@ export function CustomerOrderPanel({
         idempotencyKey: idemRef.current,
       })
     );
+  }
+
+  async function payWithMidtrans() {
+    await run(async () => {
+      const data = await apiSend<{ token: string; redirect_url: string }>(
+        "/api/payments/create-token",
+        "POST",
+        { orderId: order.id }
+      );
+
+      if (typeof window !== "undefined" && window.snap) {
+        window.snap.pay(data.token, {
+          onSuccess: async () => {
+            await onRefresh();
+          },
+          onPending: async () => {
+            await onRefresh();
+          },
+          onError: () => {
+            onError("Pembayaran Midtrans dibatalkan atau gagal");
+          },
+          onClose: () => {
+            void onRefresh();
+          },
+        });
+      } else if (data.redirect_url) {
+        window.open(data.redirect_url, "_blank");
+      } else {
+        throw new Error("Pustaka Snap Midtrans belum siap dimuat");
+      }
+    });
   }
 
   async function submitReject() {
@@ -212,23 +259,55 @@ export function CustomerOrderPanel({
       ) : null}
 
       {order.status === "WAITING_CUSTOMER_PAYMENT" ? (
-        <div className="mt-4 flex flex-wrap items-end gap-3 rounded-lg border-2 border-black bg-orange-50 p-3">
-          <label className="flex flex-col gap-1 text-xs font-bold text-black">
-            Metode pembayaran
-            <select
-              value={method}
-              onChange={(event) => setMethod(event.target.value as typeof method)}
-              className="h-10 rounded-md border-2 border-black bg-white px-3 text-sm font-medium"
+        <div className="mt-4 flex flex-col gap-3 rounded-lg border-2 border-black bg-orange-50 p-4">
+          <div>
+            <p className="text-sm font-extrabold text-black">Pembayaran Pesanan</p>
+            <p className="mt-1 text-xs text-neutral-600">
+              Selesaikan pembayaran menggunakan gateway Midtrans Sandbox (QRIS, GoPay, ShopeePay, Virtual Account simulasi tanpa uang asli).
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void payWithMidtrans()}
+              disabled={busy || !canPay}
+              className={buttonPrimary}
             >
-              <option value="QRIS">QRIS</option>
-              <option value="VIRTUAL_ACCOUNT">Virtual Account</option>
-              <option value="MOCK_TRANSFER">Transfer mock</option>
-            </select>
-          </label>
-          <button type="button" onClick={() => void pay()} disabled={busy || !canPay} className={buttonPrimary}>
-            {busy ? <Loader2 size={16} className="animate-spin" /> : null}
-            Bayar sekarang
-          </button>
+              {busy ? <Loader2 size={16} className="animate-spin" /> : null}
+              Bayar Sekarang (Midtrans Snap)
+            </button>
+          </div>
+
+          <details className="mt-1 text-xs text-neutral-600">
+            <summary className="cursor-pointer font-bold hover:text-black">
+              Simulasi pembayaran instan (mock internal)
+            </summary>
+            <div className="mt-2 flex flex-wrap items-end gap-2 rounded-md border border-neutral-300 bg-white p-2">
+              <label className="flex flex-col gap-1 font-bold text-black">
+                Metode simulasi
+                <select
+                  value={method}
+                  onChange={(event) => setMethod(event.target.value as typeof method)}
+                  className="h-9 rounded-md border-2 border-black bg-white px-2 text-xs font-medium"
+                >
+                  <option value="QRIS">QRIS</option>
+                  <option value="VIRTUAL_ACCOUNT">Virtual Account</option>
+                  <option value="MOCK_TRANSFER">Transfer mock</option>
+                </select>
+              </label>
+              <button
+                type="button"
+                onClick={() => void pay()}
+                disabled={busy || !canPay}
+                className={buttonNeutral}
+              >
+                {busy ? <Loader2 size={14} className="animate-spin" /> : null}
+                Konfirmasi bayar instan
+              </button>
+            </div>
+          </details>
+
           {!canPay ? (
             <p className="text-xs font-bold text-red-700">Waktu pembayaran habis. Muat ulang status.</p>
           ) : null}
