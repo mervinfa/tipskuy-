@@ -36,9 +36,16 @@ type DraftItem = {
   imageUrl: string;
 };
 
+function newDraftKey(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `item-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 function newDraftItem(): DraftItem {
   return {
-    key: crypto.randomUUID(),
+    key: newDraftKey(),
     name: "",
     description: "",
     quantity: "1",
@@ -96,6 +103,20 @@ export function CariDriverApp() {
     if (me?.role !== "CUSTOMER") return;
     void loadTrips();
   }, [me, loadTrips]);
+
+  useEffect(() => {
+    if (!selectedTrip) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setSelectedTrip(null);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previous;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [selectedTrip]);
 
   async function loadContact(trip: Trip) {
     if (contacts[trip.id] || contactLoading === trip.id) return;
@@ -350,14 +371,28 @@ export function CariDriverApp() {
       </section>
 
       {selectedTrip ? (
-        <OrderCreateForm
-          trip={selectedTrip}
-          onCancel={() => setSelectedTrip(null)}
-          onCreated={(created) => {
-            setSelectedTrip(null);
-            router.push(`/caridriver/pesanan?order=${encodeURIComponent(created.id)}`);
+        <div
+          className="fixed inset-0 z-[110] flex items-end justify-center bg-black/40 p-3 sm:items-center sm:p-4"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setSelectedTrip(null);
           }}
-        />
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Form titipan"
+            className="max-h-[90vh] w-full max-w-3xl overflow-y-auto"
+          >
+            <OrderCreateForm
+              trip={selectedTrip}
+              onCancel={() => setSelectedTrip(null)}
+              onCreated={(created) => {
+                setSelectedTrip(null);
+                router.push(`/caridriver/pesanan?order=${encodeURIComponent(created.id)}`);
+              }}
+            />
+          </div>
+        </div>
       ) : null}
 
       {chatTarget ? (

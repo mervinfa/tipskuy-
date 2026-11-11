@@ -95,6 +95,25 @@ describe("Chat customer dan driver", () => {
     expect(messages.data.items).toHaveLength(1);
     expect(messages.data.items[0].body).toBe("Halo driver, bisa titip hari ini?");
     expect(messages.data.items[0].senderId).toBe(customer.id);
+
+    const secondTripId = await createTripFixture(driver.driverProfileId);
+    mockSession(customer);
+    const reopenRes = await startConversationRoute(
+      jsonRequest("http://localhost:3000/api/conversations", "POST", {
+        tripId: secondTripId,
+      }),
+      { params: Promise.resolve({}) }
+    );
+    const reopened = (await reopenRes.json()) as Envelope<{ id: string; tripId: string }>;
+    expect(reopened.data.id).toBe(started.data.id);
+    expect(reopened.data.tripId).toBe(secondTripId);
+
+    const historyRes = await listMessagesRoute(
+      new Request(`http://localhost:3000/api/conversations/${started.data.id}/messages`),
+      ctx(started.data.id)
+    );
+    const history = (await historyRes.json()) as Envelope<{ items: { body: string }[] }>;
+    expect(history.data.items).toHaveLength(1);
   });
 
   it("pengguna di luar percakapan tidak dapat membaca pesan", async () => {

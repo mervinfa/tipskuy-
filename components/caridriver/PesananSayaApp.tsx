@@ -9,7 +9,7 @@ import { StatusBadge } from "@/components/app/StatusBadge";
 import { useMe } from "@/components/app/useMe";
 import { ChatModal } from "@/components/chat/ChatModal";
 import { CustomerOrderPanel } from "@/components/caridriver/CustomerOrderPanel";
-import type { OrderDetail, OrderListItem } from "@/components/app/types";
+import type { ConversationSummary, OrderDetail, OrderListItem } from "@/components/app/types";
 import { formatRupiah } from "@/lib/format";
 
 type OrderPage = { items: OrderListItem[]; nextCursor: string | null };
@@ -30,7 +30,14 @@ export function PesananSayaApp() {
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loadingOrder, setLoadingOrder] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
-  const [chatTarget, setChatTarget] = useState<{ id: string; title: string } | null>(null);
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+  const [conversationsError, setConversationsError] = useState<string | null>(null);
+  const [loadingConversations, setLoadingConversations] = useState(false);
+  const [chatTarget, setChatTarget] = useState<{
+    conversationId?: string;
+    orderId?: string;
+    title: string;
+  } | null>(null);
 
   const loadOrders = useCallback(async () => {
     if (!me || me.role !== "CUSTOMER") return;
@@ -43,6 +50,20 @@ export function PesananSayaApp() {
       setOrdersError(apiErrorMessage(error));
     } finally {
       setLoadingOrders(false);
+    }
+  }, [me]);
+
+  const loadConversations = useCallback(async () => {
+    if (!me || me.role !== "CUSTOMER") return;
+    setLoadingConversations(true);
+    setConversationsError(null);
+    try {
+      const data = await apiGet<{ items: ConversationSummary[] }>("/api/conversations");
+      setConversations(data.items);
+    } catch (error) {
+      setConversationsError(apiErrorMessage(error));
+    } finally {
+      setLoadingConversations(false);
     }
   }, [me]);
 
@@ -69,11 +90,13 @@ export function PesananSayaApp() {
   useEffect(() => {
     if (me?.role !== "CUSTOMER") return;
     void loadOrders();
+    void loadConversations();
     const timer = window.setInterval(() => {
       void loadOrders();
+      void loadConversations();
     }, 8000);
     return () => window.clearInterval(timer);
-  }, [me, loadOrders]);
+  }, [me, loadOrders, loadConversations]);
 
   useEffect(() => {
     const fromUrl = new URLSearchParams(window.location.search).get("order");
@@ -245,7 +268,7 @@ export function PesananSayaApp() {
               onError={setOrderError}
               onOpenChat={() =>
                 setChatTarget({
-                  id: order.id,
+                  orderId: order.id,
                   title: `Chat dengan ${order.driver?.user.name ?? "driver"}`,
                 })
               }
@@ -259,14 +282,68 @@ export function PesananSayaApp() {
         </section>
       ) : null}
 
-      <section className={cardClass}>
-        <p className="flex items-center gap-2 text-sm font-extrabold text-black">
-          <MessageCircle size={17} />
-          Butuh bertanya sebelum memesan? Buka chat dari kartu driver di halaman cari driver.
-        </p>
-        <Link href="/caridriver" className={`${buttonNeutral} mt-3`}>
-          Buka cari driver
-        </Link>
+      <section className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-xl font-extrabold text-black md:text-2xl">Percakapan</h2>
+          <button
+            type="button"
+            onClick={() => void loadConversations()}
+            className={buttonNeutral}
+            disabled={loadingConversations}
+          >
+            <RefreshCw size={15} className={loadingConversations ? "animate-spin" : ""} />
+            Muat ulang
+          </button>
+        </div>
+        {conversationsError ? (
+          <p className="rounded-lg border-2 border-red-500 bg-red-50 p-3 text-sm font-bold text-red-700">
+            {conversationsError}
+          </p>
+        ) : null}
+        {!loadingConversations && conversations.length === 0 ? (
+          <div className={cardClass}>
+            <p className="text-sm font-bold text-gray-700">Belum ada percakapan.</p>
+            <p className="mt-1 text-xs font-medium text-gray-500">
+              Buka chat dari kartu driver untuk mulai bertanya.
+            </p>
+          </div>
+        ) : null}
+        <div className="grid gap-3 lg:grid-cols-2">
+          {conversations.map((conversation) => (
+            <button
+              key={conversation.id}
+              type="button"
+              onClick={() =>
+                setChatTarget({
+                  conversationId: conversation.id,
+                  title: `Chat dengan ${conversation.driver.user.name}`,
+                })
+              }
+              className="rounded-xl border-[3px] border-black bg-white p-3 text-left shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-y-0.5"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-extrabold text-black">
+                  {conversation.driver.user.name}
+                </p>
+                <p className="shrink-0 text-[10px] font-semibold text-gray-500">
+                  {formatDateTime(conversation.updatedAt)}
+                </p>
+              </div>
+              <p className="mt-1 text-xs font-medium text-gray-600">
+                {conversation.trip
+                  ? `${conversation.trip.originCity} ke ${conversation.trip.destCity}`
+                  : "Order dari postingan terbuka"}
+              </p>
+              <p className="mt-2 line-clamp-2 rounded-md border-2 border-black bg-gray-50 p-2 text-xs font-medium text-gray-700">
+                {conversation.lastMessage?.body ?? "Belum ada pesan."}
+              </p>
+              <p className="mt-2 flex items-center gap-1 text-xs font-extrabold text-black">
+                <MessageCircle size={14} />
+                Buka chat
+              </p>
+            </button>
+          ))}
+        </div>
       </section>
 
       {chatTarget ? (
@@ -274,7 +351,8 @@ export function PesananSayaApp() {
           open
           onClose={() => setChatTarget(null)}
           title={chatTarget.title}
-          start={{ orderId: chatTarget.id }}
+          conversationId={chatTarget.conversationId}
+          start={chatTarget.orderId ? { orderId: chatTarget.orderId } : undefined}
         />
       ) : null}
     </div>

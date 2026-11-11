@@ -19,7 +19,7 @@ Dokumen ini adalah sumber kebenaran untuk database, arsitektur folder, kontrak A
 | 6 | Upload dua langkah: `POST /api/uploads` mengembalikan URL, lalu URL dikirim di body JSON endpoint order | Validasi file terpusat, body order tetap JSON |
 | 7 | Data wilayah Indonesia dan koordinat berupa file JSON statis hasil build script | Tanpa ketergantungan API pihak ketiga saat runtime |
 | 8 | Satu sumber state order di server, diakses client lewat SWR/TanStack Query. Modal tidak menyimpan salinan status order | Menghilangkan redundansi state antar modal |
-| 9 | Chat disimpan di tabel `Conversation` dan `Message`, terikat pada trip atau order. Nomor WhatsApp tetap tidak ada di daftar trip dan hanya diambil lewat endpoint kontak saat tombol ditekan | Customer bisa berdiskusi di dalam web tanpa membocorkan nomor secara massal |
+| 9 | Chat disimpan di tabel `Conversation` dan `Message`, satu percakapan per pasangan customer dan driver. Trip atau order terakhir disimpan sebagai konteks agar riwayat tidak terputus saat customer membuka trip lain dengan driver yang sama. Nomor WhatsApp tetap tidak ada di daftar trip dan hanya diambil lewat endpoint kontak saat tombol ditekan | Customer bisa berdiskusi di dalam web tanpa membocorkan nomor secara massal dan tanpa kehilangan riwayat |
 
 Nama status mengikuti dokumen ini (bukan nama lama `PENDING_PRICE`, `WAITING_PAYMENT`, dst.). Lihat bagian 3.
 
@@ -468,6 +468,7 @@ model Conversation {
 
   messages Message[]
 
+  @@unique([customerId, driverId])
   @@index([customerId, updatedAt(sort: Desc)])
   @@index([driverId, updatedAt(sort: Desc)])
   @@index([tripId])
@@ -674,8 +675,7 @@ ALTER TABLE "Order" ADD CONSTRAINT order_total_consistent CHECK (
 );
 CREATE INDEX order_pending_payment_idx ON "Order" ("paymentDeadline")
   WHERE "status" = 'WAITING_CUSTOMER_PAYMENT';
-CREATE UNIQUE INDEX conversation_customer_trip_unique ON "Conversation" ("customerId", "tripId")
-  WHERE "tripId" IS NOT NULL;
+CREATE UNIQUE INDEX "Conversation_customerId_driverId_key" ON "Conversation" ("customerId", "driverId");
 ```
 
 ### 2.3 Catatan Skema
@@ -685,7 +685,7 @@ CREATE UNIQUE INDEX conversation_customer_trip_unique ON "Conversation" ("custom
 - `WalletTransaction.escrowId` unik: bahkan jika ada bug di service, rilis dana kedua untuk escrow yang sama ditolak database.
 - `OrderStatusLog` adalah audit trail. Setiap `transition()` menulis satu baris.
 - Wallet driver dibuat saat registrasi driver, dalam transaksi yang sama dengan pembuatan `DriverProfile`.
-- `Conversation` unik per pasangan customer dan trip (partial index) serta unik per `orderId`. Satu trip hanya punya satu ruang obrolan untuk satu customer. Jika order dibuat dari trip yang sudah punya percakapan, order tersebut ditautkan ke percakapan yang sama.
+- `Conversation` unik per pasangan customer dan driver, sedangkan `orderId` tetap unik untuk konteks order terakhir. Riwayat percakapan tidak terputus saat customer membuka trip lain dengan driver yang sama. Trip dan order terakhir disimpan pada percakapan yang sama; order baru menimpa konteks order lama.
 - `Message.body` dibatasi 1000 karakter di Zod dan `VarChar(1000)` di database. Pesan tidak dapat diubah atau dihapus dari UI.
 
 ---
@@ -1165,7 +1165,8 @@ Aturan:
 - `tripId` hanya boleh dikirim oleh CUSTOMER. Percakapan memakai customer pemanggil dan driver pemilik trip.
 - `orderId` boleh dikirim oleh customer atau driver pemilik order. Percakapan memakai pasangan customer dan driver dari order.
 - Hanya satu dari `tripId` atau `orderId` yang boleh diisi. Body dengan keduanya atau tanpa keduanya ditolak `422`.
-- Jika percakapan untuk pasangan customer dan trip sudah ada, endpoint mengembalikan percakapan yang sama. Jika order terkait belum tertaut, `orderId` diisi.
+- Jika percakapan untuk pasangan customer dan driver sudah ada, endpoint mengembalikan percakapan yang sama tanpa menghapus riwayat. Membuka dari trip lain hanya memperbarui `tripId` dan mengosongkan `orderId` agar obrolan tetap bisa dilanjutkan; membuka dari order memperbarui `tripId` dan `orderId`.
+- Customer dapat membuka kembali percakapan lama dari daftar percakapan di halaman Pesanan Saya, dan driver dari daftar percakapan di dashboard.
 - Resource milik pengguna lain mengembalikan `404`.
 
 `GET /api/conversations` (Auth): daftar percakapan milik pemanggil, diurutkan `updatedAt` menurun, maksimum 50 item. Setiap item menyertakan `lastMessage`.
@@ -1507,6 +1508,8 @@ Pemetaan ikon yang disarankan:
 3. Halaman customer dipisah: `/caridriver` untuk mencari trip dan membuat order, `/caridriver/pesanan` untuk daftar dan detail pesanan, `/caridriver/postingan` untuk membuat postingan terbuka.
 4. Setelah order dibuat dari `/caridriver`, client mengarahkan ke `/caridriver/pesanan?order={id}` agar detail order langsung terbuka.
 5. Logo di navbar selalu menuju `/` (tampilan awal) untuk semua peran.
+6. Halaman `/caridriver/pesanan` menampilkan daftar percakapan customer agar percakapan lama dapat dibuka kembali tanpa membuat percakapan baru.
+7. Form titipan dari kartu trip tampil sebagai modal di atas halaman, bukan menambah konten di bawah daftar trip.
 
 ---
 

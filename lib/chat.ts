@@ -73,18 +73,23 @@ async function findConversationForUser(userId: string, conversationId: string) {
   return conversation;
 }
 
-async function findTripConversation(customerId: string, tripId: string) {
-  return prisma.conversation.findFirst({
-    where: { customerId, tripId },
+async function findCustomerDriverConversation(customerId: string, driverId: string) {
+  return prisma.conversation.findUnique({
+    where: { customerId_driverId: { customerId, driverId } },
     include: SUMMARY_INCLUDE,
   });
 }
 
-async function findOrderConversation(orderId: string) {
-  return prisma.conversation.findUnique({
-    where: { orderId },
+async function updateConversationContext(
+  conversationId: string,
+  data: { tripId: string | null; orderId: string | null }
+) {
+  const updated = await prisma.conversation.update({
+    where: { id: conversationId },
+    data,
     include: SUMMARY_INCLUDE,
   });
+  return serializeConversation(updated);
 }
 
 async function createConversation(data: {
@@ -115,8 +120,11 @@ export async function startConversation(
     if (!trip) {
       throw new AppError(404, "NOT_FOUND", "Trip tidak ditemukan");
     }
-    const existing = await findTripConversation(user.id, trip.id);
-    if (existing) return serializeConversation(existing);
+    const existing = await findCustomerDriverConversation(user.id, trip.driverId);
+    if (existing) {
+      if (existing.tripId === trip.id) return serializeConversation(existing);
+      return updateConversationContext(existing.id, { tripId: trip.id, orderId: null });
+    }
     try {
       return await createConversation({
         customerId: user.id,
@@ -126,8 +134,8 @@ export async function startConversation(
       });
     } catch (error) {
       if (isPrismaErrorCode(error, "P2002")) {
-        const raced = await findTripConversation(user.id, trip.id);
-        if (raced) return serializeConversation(raced);
+        const raced = await findCustomerDriverConversation(user.id, trip.driverId);
+        if (raced) return updateConversationContext(raced.id, { tripId: trip.id, orderId: null });
       }
       throw error;
     }
@@ -150,30 +158,13 @@ export async function startConversation(
     throw new AppError(404, "NOT_FOUND", "Order tidak ditemukan");
   }
 
-  const byOrder = await findOrderConversation(order.id);
-  if (byOrder) return serializeConversation(byOrder);
-
-  if (order.tripId) {
-    const byTrip = await findTripConversation(order.customerId, order.tripId);
-    if (byTrip) {
-      if (byTrip.orderId === null) {
-        try {
-          const linked = await prisma.conversation.update({
-            where: { id: byTrip.id },
-            data: { orderId: order.id },
-            include: SUMMARY_INCLUDE,
-          });
-          return serializeConversation(linked);
-        } catch (error) {
-          if (isPrismaErrorCode(error, "P2002")) {
-            const raced = await findOrderConversation(order.id);
-            if (raced) return serializeConversation(raced);
-          }
-          throw error;
-        }
-      }
-      return serializeConversation(byTrip);
-    }
+  const existing = await findCustomerDriverConversation(order.customerId, order.driverId);
+  if (existing) {
+    if (existing.orderId === order.id) return serializeConversation(existing);
+    return updateConversationContext(existing.id, {
+      tripId: order.tripId,
+      orderId: order.id,
+    });
   }
 
   try {
@@ -185,8 +176,14 @@ export async function startConversation(
     });
   } catch (error) {
     if (isPrismaErrorCode(error, "P2002")) {
-      const raced = await findOrderConversation(order.id);
-      if (raced) return serializeConversation(raced);
+      const raced = await findCustomerDriverConversation(order.customerId, order.driverId);
+      if (raced) {
+        if (raced.orderId === order.id) return serializeConversation(raced);
+        return updateConversationContext(raced.id, {
+          tripId: order.tripId,
+          orderId: order.id,
+        });
+      }
     }
     throw error;
   }

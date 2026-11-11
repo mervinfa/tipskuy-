@@ -251,6 +251,7 @@ model Conversation {
 
   messages Message[]
 
+  @@unique([customerId, driverId])
   @@index([customerId, updatedAt(sort: Desc)])
   @@index([driverId, updatedAt(sort: Desc)])
   @@index([tripId])

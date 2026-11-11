@@ -15,7 +15,9 @@ export default function Navbar() {
 
   const isDriver = me?.role === "DRIVER";
 
-  const menuList = !me
+  const menuList = loading
+    ? []
+    : !me
     ? [
         { name: "Home", path: "/#main-page" },
         { name: "About", path: "/#about" },
