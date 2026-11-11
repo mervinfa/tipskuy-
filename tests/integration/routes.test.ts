@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Session } from "next-auth";
 import { computeMockSignature } from "@/lib/jobs";
 import { prisma } from "@/lib/prisma";
+import { hashPassword } from "@/lib/password";
 import { GET as listOrdersRoute, POST as createOrderRoute } from "@/app/api/orders/route";
 import { GET as orderDetailRoute } from "@/app/api/orders/[id]/route";
 import { PATCH as setPriceRoute } from "@/app/api/orders/[id]/set-price/route";
@@ -9,6 +10,7 @@ import { POST as createTripRoute } from "@/app/api/trips/route";
 import { POST as uploadRoute } from "@/app/api/uploads/route";
 import { POST as registerRoute } from "@/app/api/auth/register/route";
 import { GET as meRoute } from "@/app/api/me/route";
+import { POST as changePasswordRoute } from "@/app/api/me/password/route";
 import { GET as notificationsRoute } from "@/app/api/notifications/route";
 import { PATCH as readNotificationRoute } from "@/app/api/notifications/[id]/read/route";
 import { PATCH as readAllNotificationsRoute } from "@/app/api/notifications/read-all/route";
@@ -412,6 +414,54 @@ describe("Route order dan notifikasi", () => {
     const json = (await res.json()) as { data: { id: string; role: string } };
     expect(json.data.id).toBe(driver.id);
     expect(json.data.role).toBe("DRIVER");
+  });
+
+  it("POST me/password menolak permintaan tanpa sesi", async () => {
+    mockSession(null);
+    const res = await changePasswordRoute(
+      jsonRequest("http://localhost:3000/api/me/password", "POST", {
+        currentPassword: "Password1",
+        newPassword: "NewPassword2",
+        confirmPassword: "NewPassword2",
+      }),
+      { params: Promise.resolve({}) }
+    );
+    expect(res.status).toBe(401);
+  });
+
+  it("POST me/password menolak jika kata sandi lama salah", async () => {
+    const user = await createUser("CUSTOMER");
+    mockSession(user, "CUSTOMER");
+    const res = await changePasswordRoute(
+      jsonRequest("http://localhost:3000/api/me/password", "POST", {
+        currentPassword: "WrongPassword99",
+        newPassword: "NewPassword2",
+        confirmPassword: "NewPassword2",
+      }),
+      { params: Promise.resolve({}) }
+    );
+    expect(res.status).toBe(400);
+    const body = await errorBody(res);
+    expect(body.error.code).toBe("INVALID_PASSWORD");
+  });
+
+  it("POST me/password berhasil memperbarui kata sandi", async () => {
+    const user = await createUser("CUSTOMER");
+    const validHash = await hashPassword("Password1");
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash: validHash },
+    });
+    mockSession(user, "CUSTOMER");
+    const res = await changePasswordRoute(
+      jsonRequest("http://localhost:3000/api/me/password", "POST", {
+        currentPassword: "Password1",
+        newPassword: "NewPassword2",
+        confirmPassword: "NewPassword2",
+      }),
+      { params: Promise.resolve({}) }
+    );
+    expect(res.status).toBe(200);
   });
 });
 

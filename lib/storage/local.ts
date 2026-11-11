@@ -1,7 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { StorageProvider, UploadInput, UploadResult } from "./index";
-import { env } from "@/lib/env";
 
 // Penyimpanan lokal untuk development. Jangan dipakai di produksi
 // (lihat AGENTS bagian 8 dan TDD 6.1).
@@ -18,8 +17,7 @@ export const localProvider: StorageProvider = {
   },
 
   publicUrl(bucket: string, key: string): string {
-    const base = env.APP_URL.replace(/\/$/, "");
-    return `${base}/uploads/${bucket}/${key}`;
+    return `/uploads/${bucket}/${key}`;
   },
 
   async signedUrl(bucket: string, key: string): Promise<string> {

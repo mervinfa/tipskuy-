@@ -17,8 +17,14 @@ function allowedBasePrefixes(): string[] {
       `${base}/storage/v1/object/sign/`,
     ];
   }
+  const prefixes = new Set<string>();
   const base = env.APP_URL.replace(/\/$/, "");
-  return [`${base}/uploads/`];
+  prefixes.add(`${base}/uploads/`);
+  prefixes.add("http://localhost:3000/uploads/");
+  prefixes.add("http://localhost:3001/uploads/");
+  prefixes.add("http://127.0.0.1:3000/uploads/");
+  prefixes.add("http://127.0.0.1:3001/uploads/");
+  return Array.from(prefixes);
 }
 
 export type ParsedStorageUrl = {
@@ -29,18 +35,23 @@ export type ParsedStorageUrl = {
 // Validasi bahwa URL berasal dari host storage terkonfigurasi, bucket yang benar,
 // dan diunggah oleh user yang sama (key diawali userId, lihat TDD 6.1.7).
 export function parseStorageUrl(url: string, bucket: StorageBucket, userId: string): ParsedStorageUrl {
-  let parsed: URL;
-  try {
-    parsed = new URL(url);
-  } catch {
-    throw new AppError(422, "INVALID_IMAGE_URL", "URL gambar tidak valid");
+  let rest = "";
+  if (url.startsWith("/uploads/")) {
+    rest = url.slice("/uploads/".length);
+  } else {
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      throw new AppError(422, "INVALID_IMAGE_URL", "URL gambar tidak valid");
+    }
+    const path = parsed.origin + parsed.pathname;
+    const matched = allowedBasePrefixes().find((prefix) => path.startsWith(prefix));
+    if (!matched) {
+      throw new AppError(422, "INVALID_IMAGE_URL", "URL gambar tidak berasal dari storage yang dikonfigurasi");
+    }
+    rest = path.slice(matched.length);
   }
-  const path = parsed.origin + parsed.pathname;
-  const matched = allowedBasePrefixes().find((prefix) => path.startsWith(prefix));
-  if (!matched) {
-    throw new AppError(422, "INVALID_IMAGE_URL", "URL gambar tidak berasal dari storage yang dikonfigurasi");
-  }
-  const rest = path.slice(matched.length);
   const expectedBucket = bucketName(bucket);
   if (!rest.startsWith(`${expectedBucket}/`)) {
     throw new AppError(422, "INVALID_IMAGE_BUCKET", "URL gambar tidak berasal dari bucket yang benar");

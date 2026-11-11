@@ -4,13 +4,15 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
-import { LogOut, Menu, X } from "lucide-react";
+import { LogOut, Menu, User, X } from "lucide-react";
 import { NotificationBell } from "@/components/app/NotificationBell";
+import { ProfileModal } from "@/components/app/ProfileModal";
 import { notifyMeChanged } from "@/components/app/useMe";
 import { useMe } from "@/components/app/useMe";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { me, loading } = useMe();
 
   const isDriver = me?.role === "DRIVER";
@@ -88,12 +90,22 @@ export default function Navbar() {
           {me ? (
             <>
               <NotificationBell role={me.role} />
-              <div className="hidden text-right sm:block">
-                <p className="max-w-32 truncate text-sm font-extrabold text-black">{me.name}</p>
-                <p className="text-[10px] font-bold uppercase tracking-wide text-gray-600">
-                  {me.role === "DRIVER" ? "Driver" : "Customer"}
-                </p>
-              </div>
+              <button
+                type="button"
+                onClick={() => setIsProfileOpen(true)}
+                className="hidden items-center gap-2 rounded-full border-2 border-black bg-white px-3 py-1.5 text-left shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-transform hover:bg-[#FFFFAF] active:translate-y-0.5 active:shadow-none sm:flex"
+                aria-label="Buka profil"
+              >
+                <div className="flex h-7 w-7 items-center justify-center rounded-full border border-black bg-[#9EF7FF]">
+                  <User size={14} className="text-black" />
+                </div>
+                <div className="max-w-28 truncate">
+                  <p className="truncate text-xs font-extrabold text-black">{me.name}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-wide text-gray-600">
+                    {me.role === "DRIVER" ? "Driver" : "Customer"}
+                  </p>
+                </div>
+              </button>
               <button
                 type="button"
                 onClick={() => void handleLogout()}
@@ -134,6 +146,23 @@ export default function Navbar() {
 
       {isOpen ? (
         <div className="absolute left-0 right-0 top-[110%] flex flex-col overflow-hidden rounded-2xl border-[3px] border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] lg:hidden">
+          {me ? (
+            <div className="border-b-2 border-black bg-[#FFFFAF] p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg border-2 border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                  <User size={20} className="text-black" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-extrabold text-black">{me.name}</p>
+                  <p className="truncate text-xs font-medium text-gray-700">{me.email}</p>
+                  <span className="mt-1 inline-block rounded-md border border-black bg-white px-2 py-0.5 text-[10px] font-extrabold text-black">
+                    {isDriver ? "Driver" : "Customer"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           <div className="flex flex-col">
             {menuList.map((item) => (
               <Link
@@ -147,7 +176,32 @@ export default function Navbar() {
             ))}
           </div>
 
-          {!me ? (
+          {me ? (
+            <div className="flex flex-col gap-2 bg-[#E5E5E5] p-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  setIsProfileOpen(true);
+                }}
+                className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-black bg-[#9EF7FF] py-3 text-sm font-extrabold text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-transform hover:bg-[#83EBF5] active:translate-y-0.5 active:shadow-none"
+              >
+                <User size={16} />
+                <span>Profil & Ganti Sandi</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  void handleLogout();
+                }}
+                className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-black bg-red-100 py-3 text-sm font-extrabold text-red-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-transform hover:bg-red-200 active:translate-y-0.5 active:shadow-none"
+              >
+                <LogOut size={16} />
+                <span>Keluar</span>
+              </button>
+            </div>
+          ) : (
             <div className="flex flex-col gap-2 bg-[#E5E5E5] p-4">
               <Link href="/auth/register" onClick={() => setIsOpen(false)}>
                 <button className="w-full rounded-full border-2 border-black bg-[#FFAE4C] py-3 text-base font-bold text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-[#FF9B51]">
@@ -160,9 +214,18 @@ export default function Navbar() {
                 </button>
               </Link>
             </div>
-          ) : null}
+          )}
         </div>
       ) : null}
+
+      <ProfileModal
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        onLogout={() => {
+          setIsProfileOpen(false);
+          void handleLogout();
+        }}
+      />
     </header>
   );
 }

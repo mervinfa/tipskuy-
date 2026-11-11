@@ -23,11 +23,11 @@ export const POST = apiHandler(async (req) => {
     throw new AppError(403, "FORBIDDEN", "Hanya driver yang dapat mengunggah bukti serah terima");
   }
   const file = form.get("file");
-  if (!(file instanceof File)) {
+  if (!file || typeof file === "string" || typeof (file as Blob).arrayBuffer !== "function") {
     throw new AppError(422, "VALIDATION_ERROR", "file wajib diisi");
   }
 
-  const inputBuffer = Buffer.from(await file.arrayBuffer());
+  const inputBuffer = Buffer.from(await (file as Blob).arrayBuffer());
   const processed = await validateImage(inputBuffer);
 
   const bucket = purpose === "ITEM" ? "items" : "proofs";

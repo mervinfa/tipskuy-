@@ -9,6 +9,10 @@ export function hashPassword(password: string): Promise<string> {
   });
 }
 
-export function verifyPassword(password: string, passwordHash: string): Promise<boolean> {
-  return verify(passwordHash, password);
+export async function verifyPassword(password: string, passwordHash: string): Promise<boolean> {
+  try {
+    return await verify(passwordHash, password);
+  } catch {
+    return false;
+  }
 }

@@ -27,6 +27,22 @@ describe("parseStorageUrl", () => {
     });
   });
 
+  it("URL relatif /uploads/ diterima", () => {
+    const url = `/uploads/order-items/${userId}/2026/11/barang.webp`;
+    expect(parseStorageUrl(url, "items", userId)).toEqual({
+      bucket: "order-items",
+      key: `${userId}/2026/11/barang.webp`,
+    });
+  });
+
+  it("URL localhost port 3001 diterima", () => {
+    const url = `http://localhost:3001/uploads/order-items/${userId}/2026/11/barang.webp`;
+    expect(parseStorageUrl(url, "items", userId)).toEqual({
+      bucket: "order-items",
+      key: `${userId}/2026/11/barang.webp`,
+    });
+  });
+
   it("U-11: URL dari host lain ditolak", () => {
     const url = `https://evil.example.com/uploads/order-items/${userId}/2026/11/barang.webp`;
     expectAppError(() => parseStorageUrl(url, "items", userId), 422, "INVALID_IMAGE_URL");

@@ -55,5 +55,17 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Kata sandi wajib diisi"),
 });
 
+export const changePasswordSchema = z
+  .strictObject({
+    currentPassword: z.string().min(1, "Kata sandi saat ini wajib diisi"),
+    newPassword: passwordSchema,
+    confirmPassword: z.string().min(1, "Konfirmasi kata sandi wajib diisi"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Konfirmasi kata sandi tidak cocok",
+    path: ["confirmPassword"],
+  });
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
