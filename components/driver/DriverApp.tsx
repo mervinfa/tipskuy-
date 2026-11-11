@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   CheckCircle2,
+  ChevronDown,
   Clock,
   Loader2,
   MapPin,
@@ -65,6 +66,7 @@ export function DriverApp() {
   const [createMessage, setCreateMessage] = useState<string | null>(null);
 
   const [orders, setOrders] = useState<OrderListItem[]>([]);
+  const [ordersTab, setOrdersTab] = useState<"active" | "history">("active");
   const [ordersError, setOrdersError] = useState<string | null>(null);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
@@ -215,9 +217,14 @@ export function DriverApp() {
     setReasonAction(null);
     setActionReason("");
     window.history.replaceState(null, "", `/driver?order=${encodeURIComponent(id)}`);
-    window.setTimeout(() => {
-      document.getElementById("driver-order-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 50);
+  }
+
+  function toggleOrder(id: string) {
+    if (orderId === id) {
+      closeOrder();
+    } else {
+      selectOrder(id);
+    }
   }
 
   function closeOrder() {
@@ -666,7 +673,7 @@ export function DriverApp() {
         )}
       </section>
 
-      <section className="space-y-3">
+      <section className="space-y-4">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-2xl font-extrabold text-black">Order masuk</h2>
           <button type="button" onClick={() => void loadOrders()} className={buttonNeutral} disabled={loadingOrders}>
@@ -674,299 +681,346 @@ export function DriverApp() {
             Muat ulang
           </button>
         </div>
+
+        {/* 2 Tab: Order Aktif & Riwayat */}
+        <div className="flex flex-wrap gap-2 border-b-2 border-black pb-2">
+          <button
+            type="button"
+            onClick={() => setOrdersTab("active")}
+            className={`rounded-lg px-4 py-2 text-sm font-extrabold transition-all ${
+              ordersTab === "active"
+                ? "border-[3px] border-black bg-[#B7FF8E] text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                : "border-2 border-black bg-white text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            Order Aktif ({orders.filter((o) => !isClosedStatus(o.status)).length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setOrdersTab("history")}
+            className={`rounded-lg px-4 py-2 text-sm font-extrabold transition-all ${
+              ordersTab === "history"
+                ? "border-[3px] border-black bg-[#B7FF8E] text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                : "border-2 border-black bg-white text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            Riwayat ({orders.filter((o) => isClosedStatus(o.status)).length})
+          </button>
+        </div>
+
         {ordersError ? (
           <p className="rounded-lg border-2 border-red-500 bg-red-50 p-3 text-sm font-bold text-red-700">{ordersError}</p>
         ) : null}
-        {orders.length === 0 && !loadingOrders ? (
+
+        {!loadingOrders && orders.filter((o) => (ordersTab === "active" ? !isClosedStatus(o.status) : isClosedStatus(o.status))).length === 0 ? (
           <div className={cardClass}>
-            <p className="text-sm font-bold text-gray-700">Belum ada order masuk.</p>
+            <p className="text-sm font-bold text-gray-700">
+              {ordersTab === "active" ? "Belum ada order aktif." : "Belum ada riwayat order."}
+            </p>
           </div>
         ) : (
           <div className="grid gap-3">
-            {orders.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => selectOrder(item.id)}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border-[3px] border-black bg-white p-4 text-left shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-y-0.5"
-              >
-                <div>
-                  <p className="text-xs font-bold text-gray-500">{formatDateTime(item.createdAt)}</p>
-                  <p className="mt-1 text-base font-extrabold text-black">
-                    {item.customer.name} - {item._count.items} barang
-                  </p>
-                  <p className="text-xs font-medium text-gray-600">Order {item.id.slice(-6)}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-extrabold text-black">
-                    {item.totalAmount ? formatRupiah(item.totalAmount) : "Belum ada harga"}
-                  </p>
-                  <StatusBadge status={item.status} />
-                </div>
-              </button>
-            ))}
+            {orders
+              .filter((o) => (ordersTab === "active" ? !isClosedStatus(o.status) : isClosedStatus(o.status)))
+              .map((item) => {
+                const isExpanded = orderId === item.id;
+                return (
+                  <div key={item.id} className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => toggleOrder(item.id)}
+                      className={`flex w-full flex-wrap items-center justify-between gap-3 rounded-xl border-[3px] border-black p-4 text-left shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all ${
+                        isExpanded ? "bg-[#FFF9E6] -translate-y-0.5" : "bg-white hover:-translate-y-0.5"
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-gray-500">{formatDateTime(item.createdAt)}</p>
+                        <p className="mt-1 text-base font-extrabold text-black">
+                          {item.customer.name} - {item._count.items} barang
+                        </p>
+                        <p className="text-xs font-medium text-gray-600">Order {item.id.slice(-6)}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <p className="text-sm font-extrabold text-black">
+                            {item.totalAmount ? formatRupiah(item.totalAmount) : "Belum ada harga"}
+                          </p>
+                          <StatusBadge status={item.status} />
+                        </div>
+                        <ChevronDown
+                          size={20}
+                          className={`text-black transition-transform duration-200 ${
+                            isExpanded ? "rotate-180" : ""
+                          }`}
+                        />
+                      </div>
+                    </button>
+
+                    {/* Inline Accordion Detail */}
+                    {isExpanded ? (
+                      <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                        {loadingOrder && !order ? (
+                          <div className={`${cardClass} flex items-center justify-center gap-2 py-8 text-sm font-bold`}>
+                            <Loader2 size={18} className="animate-spin" /> Memuat order...
+                          </div>
+                        ) : order ? (
+                          <div className={cardClass}>
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                              <div>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <h2 className="text-2xl font-extrabold text-black">Order {order.id.slice(-6)}</h2>
+                                  <StatusBadge status={order.status} />
+                                </div>
+                                <p className="mt-1 text-sm font-medium text-gray-600">
+                                  {order.trip
+                                    ? `${order.trip.originCity} ke ${order.trip.destCity}`
+                                    : "Order dari postingan terbuka"}
+                                </p>
+                                <p className="text-xs font-semibold text-gray-500">
+                                  Customer: {order.customer?.name ?? "-"} - Dibuat {formatDateTime(order.createdAt)}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setChatTarget({
+                                      orderId: order.id,
+                                      title: `Chat dengan ${order.customer?.name ?? "customer"}`,
+                                    })
+                                  }
+                                  className={buttonNeutral}
+                                >
+                                  <MessageCircle size={15} />
+                                  Chat customer
+                                </button>
+                                <button type="button" onClick={closeOrder} className="rounded-md border-2 border-black bg-white p-1.5" aria-label="Tutup detail">
+                                  <X size={16} />
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_18rem]">
+                              <div className="space-y-2">
+                                {order.items.map((it) => (
+                                  <div key={it.id} className="flex gap-3 rounded-lg border-2 border-black bg-[#FFF7D6] p-2.5">
+                                    <img src={it.imageUrl} alt={it.name} className="h-16 w-16 shrink-0 rounded-md border-2 border-black object-cover" />
+                                    <div className="min-w-0">
+                                      <p className="truncate text-sm font-extrabold text-black">{it.name}</p>
+                                      <p className="text-xs font-medium text-gray-600">
+                                        Jumlah {it.quantity} - estimasi {it.estimatedPrice ? formatRupiah(it.estimatedPrice) : "-"}
+                                      </p>
+                                      {it.description ? <p className="text-xs text-gray-600">{it.description}</p> : null}
+                                      <p className="text-xs font-bold text-black">
+                                        Harga final: {it.finalPrice !== null ? formatRupiah(it.finalPrice) : "-"}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                                {order.customerNote ? (
+                                  <p className="rounded-md border-2 border-black bg-gray-50 p-2 text-xs font-medium text-gray-700">
+                                    Catatan customer: {order.customerNote}
+                                  </p>
+                                ) : null}
+                              </div>
+
+                              <div className="rounded-lg border-2 border-black bg-[#F0F9FF] p-3">
+                                <p className="text-xs font-bold uppercase text-gray-600">Ringkasan</p>
+                                <div className="mt-2 space-y-1 text-sm font-medium text-gray-700">
+                                  <p>Subtotal: {order.itemSubtotal !== null ? formatRupiah(order.itemSubtotal) : "-"}</p>
+                                  <p>Ongkos jasa: {order.serviceFee !== null ? formatRupiah(order.serviceFee) : "-"}</p>
+                                  <p>Biaya platform: {order.platformFee !== null ? formatRupiah(order.platformFee) : "-"}</p>
+                                  <p className="border-t-2 border-black pt-1 text-base font-extrabold text-black">
+                                    Total: {order.totalAmount !== null ? formatRupiah(order.totalAmount) : "-"}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {order.status === "WAITING_DRIVER_PRICING" ? (
+                              <div className="mt-4 rounded-lg border-2 border-black bg-amber-50 p-3">
+                                <p className="text-sm font-extrabold text-black">Tentukan harga</p>
+                                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                                  {order.items.map((it) => (
+                                    <label key={it.id} className="flex flex-col gap-1 text-xs font-bold text-black">
+                                      {it.name}
+                                      <input
+                                        type="number"
+                                        min={0}
+                                        value={priceDraft[it.id] ?? "0"}
+                                        onChange={(event) =>
+                                          setPriceDraft((rows) => ({ ...rows, [it.id]: event.target.value }))
+                                        }
+                                        className={inputClass}
+                                      />
+                                    </label>
+                                  ))}
+                                </div>
+                                <label className="mt-2 flex max-w-xs flex-col gap-1 text-xs font-bold text-black">
+                                  Ongkos jasa (minimal {order.trip ? formatRupiah(order.trip.baseFee) : "tarif trip"})
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    value={serviceFee}
+                                    onChange={(event) => setServiceFee(event.target.value)}
+                                    className={inputClass}
+                                  />
+                                </label>
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                  <button type="button" onClick={() => void submitPrice()} disabled={actionBusy} className={buttonPrimary}>
+                                    {actionBusy ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                                    Kirim harga
+                                  </button>
+                                  <button type="button" onClick={() => startReasonAction("reject")} disabled={actionBusy} className={buttonDanger}>
+                                    Tolak order
+                                  </button>
+                                </div>
+                              </div>
+                            ) : null}
+
+                            {order.status === "WAITING_CUSTOMER_PAYMENT" ? (
+                              <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border-2 border-black bg-orange-50 p-3">
+                                <p className="text-sm font-bold text-black">
+                                  Menunggu customer membayar sebelum {formatDateTime(order.paymentDeadline)}
+                                </p>
+                                <button type="button" onClick={() => startReasonAction("reject")} disabled={actionBusy} className={buttonDanger}>
+                                  Tolak order
+                                </button>
+                              </div>
+                            ) : null}
+
+                            {order.status === "PAID_HELD_IN_ESCROW" ? (
+                              <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border-2 border-black bg-blue-50 p-3">
+                                <p className="text-sm font-bold text-black">Dana sudah dibayar dan ditahan. Mulai perjalanan jika siap.</p>
+                                <button type="button" onClick={() => void startOrderAction()} disabled={actionBusy} className={buttonPrimary}>
+                                  {actionBusy ? <Loader2 size={16} className="animate-spin" /> : <Truck size={16} />}
+                                  Mulai perjalanan
+                                </button>
+                                <button type="button" onClick={() => startReasonAction("dispute")} disabled={actionBusy} className={buttonNeutral}>
+                                  Ajukan sengketa
+                                </button>
+                              </div>
+                            ) : null}
+
+                            {order.status === "IN_TRANSIT" ? (
+                              <div className="mt-4 rounded-lg border-2 border-black bg-indigo-50 p-3">
+                                <p className="text-sm font-extrabold text-black">Kirim bukti serah terima</p>
+                                <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                                  <ImageUpload
+                                    purpose="PROOF"
+                                    label="Foto bukti"
+                                    value={proofUrl}
+                                    onChange={setProofUrl}
+                                  />
+                                  <label className="flex flex-col gap-1 text-xs font-bold text-black">
+                                    Catatan (opsional)
+                                    <textarea
+                                      value={proofNote}
+                                      onChange={(event) => setProofNote(event.target.value)}
+                                      rows={4}
+                                      className="rounded-md border-2 border-black bg-white p-2 text-sm font-medium text-black outline-none placeholder:text-gray-500"
+                                      placeholder="Contoh: Diterima langsung oleh customer"
+                                    />
+                                  </label>
+                                </div>
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                  <button type="button" onClick={() => void deliverOrderAction()} disabled={actionBusy} className={buttonPrimary}>
+                                    {actionBusy ? <Loader2 size={16} className="animate-spin" /> : <Package size={16} />}
+                                    Tandai sudah diantar
+                                  </button>
+                                  <button type="button" onClick={() => startReasonAction("dispute")} disabled={actionBusy} className={buttonNeutral}>
+                                    Ajukan sengketa
+                                  </button>
+                                </div>
+                              </div>
+                            ) : null}
+
+                            {order.status === "DELIVERED_PENDING_CONFIRMATION" ? (
+                              <p className="mt-4 rounded-md border-2 border-black bg-purple-50 p-3 text-sm font-bold text-purple-900">
+                                Bukti sudah dikirim. Menunggu customer mengonfirmasi pesanan selesai.
+                              </p>
+                            ) : null}
+
+                            {order.deliveryProof ? (
+                              <div className="mt-4 rounded-lg border-2 border-black bg-white p-3">
+                                <p className="text-sm font-extrabold text-black">Bukti terkirim</p>
+                                <img
+                                  src={order.deliveryProof.imageUrl}
+                                  alt="Bukti serah terima"
+                                  className="mt-2 max-h-56 rounded-md border-2 border-black object-contain"
+                                />
+                              </div>
+                            ) : null}
+
+                            {isClosedStatus(order.status) ? (
+                              <p className="mt-3 text-xs font-semibold text-gray-500">
+                                Order ditutup {formatDateTime(order.closedAt ?? order.updatedAt)}
+                                {order.closeReason ? ` - ${order.closeReason}` : ""}
+                              </p>
+                            ) : null}
+
+                            {reasonAction ? (
+                              <div className="mt-4 rounded-lg border-2 border-black bg-white p-3">
+                                <label className="flex flex-col gap-1 text-xs font-bold text-black">
+                                  {reasonAction === "reject"
+                                    ? "Alasan penolakan (opsional)"
+                                    : "Alasan sengketa (minimal 10 karakter)"}
+                                  <textarea
+                                    value={actionReason}
+                                    onChange={(event) => setActionReason(event.target.value)}
+                                    rows={3}
+                                    maxLength={500}
+                                    className="rounded-md border-2 border-black bg-white p-3 text-sm font-medium text-black outline-none placeholder:text-gray-500"
+                                    placeholder={
+                                      reasonAction === "reject"
+                                        ? "Contoh: rute tidak sesuai"
+                                        : "Jelaskan masalah pesanan secara singkat"
+                                    }
+                                  />
+                                </label>
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (reasonAction === "reject") void submitRejectOrderAction();
+                                      else void submitDisputeOrderAction();
+                                    }}
+                                    disabled={actionBusy}
+                                    className={reasonAction === "reject" ? buttonDanger : buttonPrimary}
+                                  >
+                                    {actionBusy ? <Loader2 size={16} className="animate-spin" /> : null}
+                                    {reasonAction === "reject" ? "Kirim penolakan" : "Kirim sengketa"}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setReasonAction(null);
+                                      setActionReason("");
+                                    }}
+                                    disabled={actionBusy}
+                                    className={buttonNeutral}
+                                  >
+                                    Batal
+                                  </button>
+                                </div>
+                              </div>
+                            ) : null}
+
+                            {orderError ? (
+                              <p className="mt-3 rounded-md border-2 border-red-500 bg-red-50 p-2 text-sm font-bold text-red-700">
+                                {orderError}
+                              </p>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
           </div>
         )}
       </section>
-
-      {orderId ? (
-        <section id="driver-order-panel" className="scroll-mt-28">
-          {loadingOrder && !order ? (
-            <div className={`${cardClass} flex items-center gap-2 text-sm font-bold`}>
-              <Loader2 size={16} className="animate-spin" /> Memuat order...
-            </div>
-          ) : order ? (
-            <div className={cardClass}>
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-2xl font-extrabold text-black">Order {order.id.slice(-6)}</h2>
-                    <StatusBadge status={order.status} />
-                  </div>
-                  <p className="mt-1 text-sm font-medium text-gray-600">
-                    {order.trip
-                      ? `${order.trip.originCity} ke ${order.trip.destCity}`
-                      : "Order dari postingan terbuka"}
-                  </p>
-                  <p className="text-xs font-semibold text-gray-500">
-                    Customer: {order.customer?.name ?? "-"} - Dibuat {formatDateTime(order.createdAt)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setChatTarget({
-                        orderId: order.id,
-                        title: `Chat dengan ${order.customer?.name ?? "customer"}`,
-                      })
-                    }
-                    className={buttonNeutral}
-                  >
-                    <MessageCircle size={15} />
-                    Chat customer
-                  </button>
-                  <button type="button" onClick={closeOrder} className="rounded-md border-2 border-black bg-white p-1.5" aria-label="Tutup detail">
-                    <X size={16} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_18rem]">
-                <div className="space-y-2">
-                  {order.items.map((item) => (
-                    <div key={item.id} className="flex gap-3 rounded-lg border-2 border-black bg-[#FFF7D6] p-2.5">
-                      <img src={item.imageUrl} alt={item.name} className="h-16 w-16 shrink-0 rounded-md border-2 border-black object-cover" />
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-extrabold text-black">{item.name}</p>
-                        <p className="text-xs font-medium text-gray-600">
-                          Jumlah {item.quantity} - estimasi {item.estimatedPrice ? formatRupiah(item.estimatedPrice) : "-"}
-                        </p>
-                        {item.description ? <p className="text-xs text-gray-600">{item.description}</p> : null}
-                        <p className="text-xs font-bold text-black">
-                          Harga final: {item.finalPrice !== null ? formatRupiah(item.finalPrice) : "-"}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                  {order.customerNote ? (
-                    <p className="rounded-md border-2 border-black bg-gray-50 p-2 text-xs font-medium text-gray-700">
-                      Catatan customer: {order.customerNote}
-                    </p>
-                  ) : null}
-                </div>
-
-                <div className="rounded-lg border-2 border-black bg-[#F0F9FF] p-3">
-                  <p className="text-xs font-bold uppercase text-gray-600">Ringkasan</p>
-                  <div className="mt-2 space-y-1 text-sm font-medium text-gray-700">
-                    <p>Subtotal: {order.itemSubtotal !== null ? formatRupiah(order.itemSubtotal) : "-"}</p>
-                    <p>Ongkos jasa: {order.serviceFee !== null ? formatRupiah(order.serviceFee) : "-"}</p>
-                    <p>Biaya platform: {order.platformFee !== null ? formatRupiah(order.platformFee) : "-"}</p>
-                    <p className="border-t-2 border-black pt-1 text-base font-extrabold text-black">
-                      Total: {order.totalAmount !== null ? formatRupiah(order.totalAmount) : "-"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {order.status === "WAITING_DRIVER_PRICING" ? (
-                <div className="mt-4 rounded-lg border-2 border-black bg-amber-50 p-3">
-                  <p className="text-sm font-extrabold text-black">Tentukan harga</p>
-                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                    {order.items.map((item) => (
-                      <label key={item.id} className="flex flex-col gap-1 text-xs font-bold text-black">
-                        {item.name}
-                        <input
-                          type="number"
-                          min={0}
-                          value={priceDraft[item.id] ?? "0"}
-                          onChange={(event) =>
-                            setPriceDraft((rows) => ({ ...rows, [item.id]: event.target.value }))
-                          }
-                          className={inputClass}
-                        />
-                      </label>
-                    ))}
-                  </div>
-                  <label className="mt-2 flex max-w-xs flex-col gap-1 text-xs font-bold text-black">
-                    Ongkos jasa (minimal {order.trip ? formatRupiah(order.trip.baseFee) : "tarif trip"})
-                    <input
-                      type="number"
-                      min={0}
-                      value={serviceFee}
-                      onChange={(event) => setServiceFee(event.target.value)}
-                      className={inputClass}
-                    />
-                  </label>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <button type="button" onClick={() => void submitPrice()} disabled={actionBusy} className={buttonPrimary}>
-                      {actionBusy ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
-                      Kirim harga
-                    </button>
-                    <button type="button" onClick={() => startReasonAction("reject")} disabled={actionBusy} className={buttonDanger}>
-                      Tolak order
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-
-              {order.status === "WAITING_CUSTOMER_PAYMENT" ? (
-                <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border-2 border-black bg-orange-50 p-3">
-                  <p className="text-sm font-bold text-black">
-                    Menunggu customer membayar sebelum {formatDateTime(order.paymentDeadline)}
-                  </p>
-                  <button type="button" onClick={() => startReasonAction("reject")} disabled={actionBusy} className={buttonDanger}>
-                    Tolak order
-                  </button>
-                </div>
-              ) : null}
-
-              {order.status === "PAID_HELD_IN_ESCROW" ? (
-                <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border-2 border-black bg-blue-50 p-3">
-                  <p className="text-sm font-bold text-black">Dana sudah dibayar dan ditahan. Mulai perjalanan jika siap.</p>
-                  <button type="button" onClick={() => void startOrderAction()} disabled={actionBusy} className={buttonPrimary}>
-                    {actionBusy ? <Loader2 size={16} className="animate-spin" /> : <Truck size={16} />}
-                    Mulai perjalanan
-                  </button>
-                  <button type="button" onClick={() => startReasonAction("dispute")} disabled={actionBusy} className={buttonNeutral}>
-                    Ajukan sengketa
-                  </button>
-                </div>
-              ) : null}
-
-              {order.status === "IN_TRANSIT" ? (
-                <div className="mt-4 rounded-lg border-2 border-black bg-indigo-50 p-3">
-                  <p className="text-sm font-extrabold text-black">Kirim bukti serah terima</p>
-                  <div className="mt-2 grid gap-3 sm:grid-cols-2">
-                    <ImageUpload
-                      purpose="PROOF"
-                      label="Foto bukti"
-                      value={proofUrl}
-                      onChange={setProofUrl}
-                    />
-                    <label className="flex flex-col gap-1 text-xs font-bold text-black">
-                      Catatan (opsional)
-                      <textarea
-                        value={proofNote}
-                        onChange={(event) => setProofNote(event.target.value)}
-                        rows={4}
-                        className="rounded-md border-2 border-black bg-white p-2 text-sm font-medium text-black outline-none placeholder:text-gray-500"
-                        placeholder="Contoh: Diterima langsung oleh customer"
-                      />
-                    </label>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <button type="button" onClick={() => void deliverOrderAction()} disabled={actionBusy} className={buttonPrimary}>
-                      {actionBusy ? <Loader2 size={16} className="animate-spin" /> : <Package size={16} />}
-                      Tandai sudah diantar
-                    </button>
-                    <button type="button" onClick={() => startReasonAction("dispute")} disabled={actionBusy} className={buttonNeutral}>
-                      Ajukan sengketa
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-
-              {order.status === "DELIVERED_PENDING_CONFIRMATION" ? (
-                <p className="mt-4 rounded-md border-2 border-black bg-purple-50 p-3 text-sm font-bold text-purple-900">
-                  Bukti sudah dikirim. Menunggu customer mengonfirmasi pesanan selesai.
-                </p>
-              ) : null}
-
-              {order.deliveryProof ? (
-                <div className="mt-4 rounded-lg border-2 border-black bg-white p-3">
-                  <p className="text-sm font-extrabold text-black">Bukti terkirim</p>
-                  <img
-                    src={order.deliveryProof.imageUrl}
-                    alt="Bukti serah terima"
-                    className="mt-2 max-h-56 rounded-md border-2 border-black object-contain"
-                  />
-                </div>
-              ) : null}
-
-              {isClosedStatus(order.status) ? (
-                <p className="mt-3 text-xs font-semibold text-gray-500">
-                  Order ditutup {formatDateTime(order.closedAt ?? order.updatedAt)}
-                  {order.closeReason ? ` - ${order.closeReason}` : ""}
-                </p>
-              ) : null}
-
-              {reasonAction ? (
-                <div className="mt-4 rounded-lg border-2 border-black bg-white p-3">
-                  <label className="flex flex-col gap-1 text-xs font-bold text-black">
-                    {reasonAction === "reject"
-                      ? "Alasan penolakan (opsional)"
-                      : "Alasan sengketa (minimal 10 karakter)"}
-                    <textarea
-                      value={actionReason}
-                      onChange={(event) => setActionReason(event.target.value)}
-                      rows={3}
-                      maxLength={500}
-                      className="rounded-md border-2 border-black bg-white p-3 text-sm font-medium text-black outline-none placeholder:text-gray-500"
-                      placeholder={
-                        reasonAction === "reject"
-                          ? "Contoh: rute tidak sesuai"
-                          : "Jelaskan masalah pesanan secara singkat"
-                      }
-                    />
-                  </label>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (reasonAction === "reject") void submitRejectOrderAction();
-                        else void submitDisputeOrderAction();
-                      }}
-                      disabled={actionBusy}
-                      className={reasonAction === "reject" ? buttonDanger : buttonPrimary}
-                    >
-                      {actionBusy ? <Loader2 size={16} className="animate-spin" /> : null}
-                      {reasonAction === "reject" ? "Kirim penolakan" : "Kirim sengketa"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setReasonAction(null);
-                        setActionReason("");
-                      }}
-                      disabled={actionBusy}
-                      className={buttonNeutral}
-                    >
-                      Batal
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-
-              {orderError ? (
-                <p className="mt-3 rounded-md border-2 border-red-500 bg-red-50 p-2 text-sm font-bold text-red-700">
-                  {orderError}
-                </p>
-              ) : null}
-            </div>
-          ) : null}
-        </section>
-      ) : null}
 
       <section id="postingan-terbuka" className="scroll-mt-28 space-y-3 md:scroll-mt-32">
         <div className="flex items-center justify-between gap-3">

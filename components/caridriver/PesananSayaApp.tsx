@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Loader2, MessageCircle, RefreshCw, Search } from "lucide-react";
+import { ChevronDown, Loader2, MessageCircle, RefreshCw, Search } from "lucide-react";
 import { apiErrorMessage, apiGet } from "@/components/app/api";
-import { formatDateTime } from "@/components/app/format";
+import { formatDateTime, isClosedStatus } from "@/components/app/format";
 import { StatusBadge } from "@/components/app/StatusBadge";
 import { useMe } from "@/components/app/useMe";
 import { ChatModal } from "@/components/chat/ChatModal";
@@ -26,6 +26,7 @@ export function PesananSayaApp() {
   const [orders, setOrders] = useState<OrderListItem[]>([]);
   const [ordersError, setOrdersError] = useState<string | null>(null);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [activeTab, setActiveTab] = useState<"active" | "history">("active");
   const [orderId, setOrderId] = useState<string | null>(null);
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loadingOrder, setLoadingOrder] = useState(false);
@@ -118,9 +119,14 @@ export function PesananSayaApp() {
     setOrderId(id);
     setOrder(null);
     window.history.replaceState(null, "", `/caridriver/pesanan?order=${encodeURIComponent(id)}`);
-    window.setTimeout(() => {
-      document.getElementById("order-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 50);
+  }
+
+  function toggleOrder(id: string) {
+    if (orderId === id) {
+      closeOrder();
+    } else {
+      openOrder(id);
+    }
   }
 
   function closeOrder() {
@@ -199,12 +205,38 @@ export function PesananSayaApp() {
         </div>
       </section>
 
-      <section className="space-y-3">
+      <section className="space-y-4">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-xl font-extrabold text-black md:text-2xl">Daftar pesanan</h2>
           <button type="button" onClick={() => void loadOrders()} className={buttonNeutral} disabled={loadingOrders}>
             <RefreshCw size={15} className={loadingOrders ? "animate-spin" : ""} />
             Muat ulang
+          </button>
+        </div>
+
+        {/* 2 Tab: Pesanan Aktif & Riwayat */}
+        <div className="flex flex-wrap gap-2 border-b-2 border-black pb-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab("active")}
+            className={`rounded-lg px-4 py-2 text-sm font-extrabold transition-all ${
+              activeTab === "active"
+                ? "border-[3px] border-black bg-[#B7FF8E] text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                : "border-2 border-black bg-white text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            Pesanan Aktif ({orders.filter((o) => !isClosedStatus(o.status)).length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("history")}
+            className={`rounded-lg px-4 py-2 text-sm font-extrabold transition-all ${
+              activeTab === "history"
+                ? "border-[3px] border-black bg-[#B7FF8E] text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                : "border-2 border-black bg-white text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            Riwayat ({orders.filter((o) => isClosedStatus(o.status)).length})
           </button>
         </div>
 
@@ -214,75 +246,96 @@ export function PesananSayaApp() {
           </p>
         ) : null}
 
-        {!loadingOrders && orders.length === 0 ? (
+        {!loadingOrders && orders.filter((o) => (activeTab === "active" ? !isClosedStatus(o.status) : isClosedStatus(o.status))).length === 0 ? (
           <div className={cardClass}>
-            <p className="text-sm font-bold text-gray-700">Belum ada pesanan.</p>
-            <p className="mt-1 text-xs font-medium text-gray-500">
-              Cari trip yang cocok lalu kirim permintaan titipan.
+            <p className="text-sm font-bold text-gray-700">
+              {activeTab === "active" ? "Belum ada pesanan aktif." : "Belum ada riwayat pesanan."}
             </p>
-            <Link href="/caridriver" className={`${buttonPrimary} mt-3`}>
-              Cari driver
-            </Link>
+            {activeTab === "active" ? (
+              <>
+                <p className="mt-1 text-xs font-medium text-gray-500">
+                  Cari trip yang cocok lalu kirim permintaan titipan.
+                </p>
+                <Link href="/caridriver" className={`${buttonPrimary} mt-3`}>
+                  Cari driver
+                </Link>
+              </>
+            ) : null}
           </div>
         ) : null}
 
         <div className="grid gap-3">
-          {orders.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => openOrder(item.id)}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border-[3px] border-black bg-white p-4 text-left shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-y-0.5"
-            >
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-gray-500">{formatDateTime(item.createdAt)}</p>
-                <p className="mt-1 text-base font-extrabold text-black">
-                  {item.tripId ? `Order ${item.id.slice(-6)}` : `Postingan ${item.id.slice(-6)}`}
-                </p>
-                <p className="text-xs font-medium text-gray-600">
-                  {item._count.items} barang - {item.driver?.user.name ?? "Driver"}
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <p className="text-sm font-extrabold text-black">
-                    {item.totalAmount ? formatRupiah(item.totalAmount) : "Menunggu harga"}
-                  </p>
-                  <StatusBadge status={item.status} />
+          {orders
+            .filter((o) => (activeTab === "active" ? !isClosedStatus(o.status) : isClosedStatus(o.status)))
+            .map((item) => {
+              const isExpanded = orderId === item.id;
+              return (
+                <div key={item.id} className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => toggleOrder(item.id)}
+                    className={`flex w-full flex-wrap items-center justify-between gap-3 rounded-xl border-[3px] border-black p-4 text-left shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all ${
+                      isExpanded ? "bg-[#FFF9E6] -translate-y-0.5" : "bg-white hover:-translate-y-0.5"
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-gray-500">{formatDateTime(item.createdAt)}</p>
+                      <p className="mt-1 text-base font-extrabold text-black">
+                        {item.tripId ? `Order ${item.id.slice(-6)}` : `Postingan ${item.id.slice(-6)}`}
+                      </p>
+                      <p className="text-xs font-medium text-gray-600">
+                        {item._count.items} barang - {item.driver?.user.name ?? "Driver"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <p className="text-sm font-extrabold text-black">
+                          {item.totalAmount ? formatRupiah(item.totalAmount) : "Menunggu harga"}
+                        </p>
+                        <StatusBadge status={item.status} />
+                      </div>
+                      <ChevronDown
+                        size={20}
+                        className={`text-black transition-transform duration-200 ${
+                          isExpanded ? "rotate-180" : ""
+                        }`}
+                      />
+                    </div>
+                  </button>
+
+                  {/* Inline Accordion Content */}
+                  {isExpanded ? (
+                    <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                      {loadingOrder && !order ? (
+                        <div className={`${cardClass} flex items-center justify-center gap-2 py-8 text-sm font-bold`}>
+                          <Loader2 size={18} className="animate-spin" /> Memuat detail pesanan...
+                        </div>
+                      ) : order ? (
+                        <CustomerOrderPanel
+                          order={order}
+                          onClose={closeOrder}
+                          onRefresh={refreshOrder}
+                          onError={setOrderError}
+                          onOpenChat={() =>
+                            setChatTarget({
+                              orderId: order.id,
+                              title: `Chat dengan ${order.driver?.user.name ?? "driver"}`,
+                            })
+                          }
+                        />
+                      ) : null}
+                      {orderError ? (
+                        <p className="mt-2 rounded-lg border-2 border-red-500 bg-red-50 p-3 text-sm font-bold text-red-700">
+                          {orderError}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
-              </div>
-            </button>
-          ))}
+              );
+            })}
         </div>
       </section>
-
-      {orderId ? (
-        <section id="order-panel" className="scroll-mt-28">
-          {loadingOrder && !order ? (
-            <div className={`${cardClass} flex items-center gap-2 text-sm font-bold`}>
-              <Loader2 size={16} className="animate-spin" /> Memuat order...
-            </div>
-          ) : order ? (
-            <CustomerOrderPanel
-              order={order}
-              onClose={closeOrder}
-              onRefresh={refreshOrder}
-              onError={setOrderError}
-              onOpenChat={() =>
-                setChatTarget({
-                  orderId: order.id,
-                  title: `Chat dengan ${order.driver?.user.name ?? "driver"}`,
-                })
-              }
-            />
-          ) : null}
-          {orderError ? (
-            <p className="mt-3 rounded-lg border-2 border-red-500 bg-red-50 p-3 text-sm font-bold text-red-700">
-              {orderError}
-            </p>
-          ) : null}
-        </section>
-      ) : null}
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-3">
