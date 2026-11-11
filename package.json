@@ -57,5 +57,10 @@
     "prisma@6.19.3": true,
     "unrs-resolver@1.11.1": true,
     "@embedded-postgres/windows-x64@18.6.0-beta.19": true
+  },
+  "optionalDependencies": {
+    "@img/sharp-libvips-linux-x64": "^1.3.4",
+    "@img/sharp-linux-x64": "^0.35.5",
+    "@node-rs/argon2-linux-x64-gnu": "^2.2.2"
   }
 }
